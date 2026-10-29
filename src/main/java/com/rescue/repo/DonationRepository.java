@@ -1,12 +1,13 @@
-
 package com.rescue.repo;
 
+import com.rescue.model.DataStore;
 import com.rescue.model.Donation;
 import java.util.*;
 
 public class DonationRepository implements Repository<Donation> {
 
-    private final Map<Integer, Donation> donations = new LinkedHashMap<>();
+
+    private final Map<Integer, Donation> donations = DataStore.getInstance().getDonations();
     private int nextId = 1;
 
     @Override
