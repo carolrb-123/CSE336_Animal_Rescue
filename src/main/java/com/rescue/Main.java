@@ -1,19 +1,67 @@
 package com.rescue;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
+import com.rescue.controller.AdopterController;
+import com.rescue.controller.AnimalController;
+import com.rescue.repo.AdopterRepository;
+import com.rescue.repo.AnimalRepository;
+import com.rescue.view.AdopterView;
+import com.rescue.view.AnimalView;
+
 public class Main {
-    static void main() {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        IO.println(String.format("Hello and welcome!"));
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            IO.println("i = " + i);
-        }
+    public static void main(String[] args) {
 
+        SwingUtilities.invokeLater(() -> {
 
+            String[] options = {
+                    "Animal Management",
+                    "Adopter Management"
+            };
+
+            int choice = JOptionPane.showOptionDialog(
+                    null,
+                    "Choose the management section:",
+                    "Animal Rescue",
+                    JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    null,
+                    options,
+                    options[0]
+            );
+
+            if (choice == 0) {
+
+                AnimalRepository animalRepository =
+                        new AnimalRepository();
+
+                AnimalView animalView =
+                        new AnimalView();
+
+                new AnimalController(
+                        animalView,
+                        animalRepository
+                );
+
+                animalView.setVisible(true);
+
+            } else if (choice == 1) {
+
+                AdopterRepository adopterRepository =
+                        new AdopterRepository();
+
+                AdopterView adopterView =
+                        new AdopterView();
+
+                new AdopterController(
+                        adopterView,
+                        adopterRepository
+                );
+
+                adopterView.setVisible(true);
+            }
+        });
     }
 }
