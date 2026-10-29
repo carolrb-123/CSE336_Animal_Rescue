@@ -7,7 +7,8 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 
 public class DonationView extends JFrame {
-
+    private final JButton  backBtn =
+            new JButton("Back to Menu");
     private static final Color DARK_GREEN =
             new Color(31, 92, 57);
     private static final Color GREEN =
@@ -203,7 +204,7 @@ public class DonationView extends JFrame {
 
         panel.add(field, c);
     }
-
+    public JButton getBackBtn() {return backBtn;}
     public String getDonorName() {
         return nameField.getText().trim();
     }

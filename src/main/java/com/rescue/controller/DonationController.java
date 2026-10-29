@@ -24,6 +24,7 @@ public class DonationController {
         this.donorRepository = donorRepository;
 
         view.addSaveListener(e -> saveDonation());
+        this.view.getBackBtn().addActionListener(e -> this.view.dispose());
     }
 
     private void saveDonation() {

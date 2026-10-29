@@ -40,7 +40,8 @@ public class CommunicationView extends JFrame {
     private static final long serialVersionUID = 1L;
     private static final String AUTO = "Auto (by recipient type)";
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("dd MMM HH:mm");
-
+    private final JButton  backBtn =
+            new JButton("Back to Menu");
     private final JComboBox<RecipientType> typeBox = new JComboBox<>();
     private final JTextField nameField = new JTextField(20);
     private final JTextField emailField = new JTextField(20);
@@ -230,6 +231,7 @@ public class CommunicationView extends JFrame {
     public String getEmail() { return emailField.getText().trim(); }
     public String getPhone() { return phoneField.getText().trim(); }
     public String getMessageText() { return messageArea.getText().trim(); }
+    public JButton getBackBtn() {return backBtn;}
 
     /** The channel picked by hand, or null for "Auto". */
     public ChannelType getSelectedChannel() {

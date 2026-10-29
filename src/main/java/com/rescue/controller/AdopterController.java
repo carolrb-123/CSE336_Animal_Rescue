@@ -18,6 +18,7 @@ public class AdopterController {
         this.view = view;
         this.repository = repository;
 
+        this.view.getBackBtn().addActionListener(e -> this.view.dispose());
         view.getAddButton().addActionListener(
                 e -> addAdopter()
         );

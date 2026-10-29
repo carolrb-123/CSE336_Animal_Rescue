@@ -52,6 +52,8 @@ public class AnimalView extends JFrame {
     private final JTextField ageField = new JTextField(20);
     private final JTextField healthField = new JTextField(20);
 
+    private final JButton  backBtn =
+            new JButton("Back to Menu");
     private final JCheckBox availableCheckBox =
             new JCheckBox("Available for adoption");
 
@@ -349,7 +351,7 @@ public class AnimalView extends JFrame {
                 new Dimension(150, 42)
         );
     }
-
+    public JButton getBackBtn() {return backBtn;}
     public JTextField getIdField() {
         return idField;
     }

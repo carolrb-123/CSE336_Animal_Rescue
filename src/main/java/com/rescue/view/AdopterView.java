@@ -50,6 +50,8 @@ public class AdopterView extends JFrame {
     private final JTextField emailField = new JTextField(20);
     private final JTextField phoneField = new JTextField(20);
 
+    private final JButton  backBtn =
+            new JButton("Back to Menu");
     private final JButton addButton =
             new RoundedButton("Add Adopter");
 
@@ -328,6 +330,8 @@ public class AdopterView extends JFrame {
                 new Dimension(150, 42)
         );
     }
+
+    public JButton getBackBtn() {return backBtn;}
 
     public JTextField getIdField() {
         return idField;

@@ -27,6 +27,7 @@ public class CommunicationController {
         this.notifier = notifier;
         this.feed = feed;
 
+        this.view.getBackBtn().addActionListener(e -> this.view.dispose());
         view.setRecipientTypes(RecipientType.values());
         view.setChannels(notifier.availableChannels());
         view.addSendListener(e -> sendMessage());
