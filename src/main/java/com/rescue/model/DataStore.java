@@ -12,6 +12,9 @@ public class DataStore {
     private Map<Integer, Donation> donations = new LinkedHashMap<>();
     private Map<Integer, Donor> donors = new LinkedHashMap<>();
     private Map<Integer, SentMessage> sentMessages = new LinkedHashMap<>();
+    private Map<Integer, Volunteer> volunteers = new LinkedHashMap<>();
+    private Map<Integer, RescueEvent> events = new LinkedHashMap<>();
+    private Map<Integer, EventRegistration> eventRegistrations = new LinkedHashMap<>();
 
     private DataStore() {}
 
@@ -24,4 +27,7 @@ public class DataStore {
     public Map<Integer, Donation> getDonations() { return donations; }
     public Map<Integer, Donor> getDonors() { return donors; }
     public Map<Integer, SentMessage> getSentMessages() { return sentMessages; }
+    public Map<Integer, Volunteer> getVolunteers() { return volunteers; }
+    public Map<Integer, RescueEvent> getEvents() { return events; }
+    public Map<Integer, EventRegistration> getEventRegistrations() { return eventRegistrations; }
 }
