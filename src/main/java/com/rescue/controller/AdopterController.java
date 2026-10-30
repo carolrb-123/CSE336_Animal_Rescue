@@ -48,81 +48,31 @@ public class AdopterController {
 
     private void addAdopter() {
 
-        try {
+        String name = view.getNameField().getText().trim();
+        String email = view.getEmailField().getText().trim();
+        String phone = view.getPhoneField().getText().trim();
 
-            int id = Integer.parseInt(
-                    view.getIdField().getText().trim()
-            );
-
-            String name =
-                    view.getNameField().getText().trim();
-
-            String email =
-                    view.getEmailField().getText().trim();
-
-            String phone =
-                    view.getPhoneField().getText().trim();
-
-            if (id <= 0) {
-
-                view.showMessage(
-                        "Adopter ID must be positive."
-                );
-
-                return;
-            }
-
-            if (name.isEmpty()
-                    || email.isEmpty()
-                    || phone.isEmpty()) {
-
-                view.showMessage(
-                        "Please fill in all fields."
-                );
-
-                return;
-            }
-
-            if (!email.contains("@")) {
-
-                view.showMessage(
-                        "Please enter a valid email."
-                );
-
-                return;
-            }
-
-            if (repository.findById(id).isPresent()) {
-
-                view.showMessage(
-                        "Adopter ID already exists."
-                );
-
-                return;
-            }
-
-            Adopter adopter = new Adopter(
-                    id,
-                    name,
-                    email,
-                    phone
-            );
-
-            repository.save(adopter);
-
-            refreshTable();
-            clearFields();
-
-            view.showMessage(
-                    "Adopter added successfully!"
-            );
-
-        } catch (NumberFormatException ex) {
-
-            view.showMessage(
-                    "Please enter a valid ID."
-            );
+        if (name.isEmpty() || email.isEmpty() || phone.isEmpty()) {
+            view.showMessage("Please fill in all fields.");
+            return;
         }
+
+        if (!email.contains("@")) {
+            view.showMessage("Please enter a valid email.");
+            return;
+        }
+
+        Adopter adopter = new Adopter(
+                repository.nextId(),
+                name,
+                email,
+                phone
+        );
+
+        repository.save(adopter);
+        refreshTable();
+        clearFields();
+        view.showMessage("Adopter added successfully!");
     }
 
     private void updateAdopter() {
@@ -299,7 +249,7 @@ public class AdopterController {
 
     private void clearFields() {
 
-        view.getIdField().setText("");
+        view.getIdField().setText("Assigned automatically");
         view.getNameField().setText("");
         view.getEmailField().setText("");
         view.getPhoneField().setText("");

@@ -12,56 +12,76 @@ import com.rescue.view.AnimalView;
 
 public class Main {
 
+    @SuppressWarnings("unused")
+    private static AnimalController animalController;
+
+    @SuppressWarnings("unused")
+    private static AdopterController adopterController;
+
+        private static final AnimalRepository animalRepository =
+            new AnimalRepository();
+
+        private static final AdopterRepository adopterRepository =
+            new AdopterRepository();
+
     public static void main(String[] args) {
 
         SwingUtilities.invokeLater(() -> {
+            showManagementMenu();
+        });
+    }
 
-            String[] options = {
-                    "Animal Management",
-                    "Adopter Management"
-            };
+    private static void showManagementMenu() {
 
-            int choice = JOptionPane.showOptionDialog(
-                    null,
-                    "Choose the management section:",
-                    "Animal Rescue",
-                    JOptionPane.DEFAULT_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE,
-                    null,
-                    options,
-                    options[0]
+        String[] options = {
+                "Animal Management",
+                "Adopter Management"
+        };
+
+        int choice = JOptionPane.showOptionDialog(
+                null,
+                "Choose the management section:",
+                "Animal Rescue",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
+        if (choice == 0) {
+
+            AnimalView animalView =
+                    new AnimalView();
+
+                animalController = new AnimalController(
+                    animalView,
+                    animalRepository
             );
 
-            if (choice == 0) {
+            animalView.getBackButton().addActionListener(e -> {
+                animalView.dispose();
+                showManagementMenu();
+            });
 
-                AnimalRepository animalRepository =
-                        new AnimalRepository();
+            animalView.setVisible(true);
 
-                AnimalView animalView =
-                        new AnimalView();
+        } else if (choice == 1) {
 
-                new AnimalController(
-                        animalView,
-                        animalRepository
-                );
+            AdopterView adopterView =
+                    new AdopterView();
 
-                animalView.setVisible(true);
+                adopterController = new AdopterController(
+                    adopterView,
+                    adopterRepository
+            );
 
-            } else if (choice == 1) {
+            adopterView.getBackButton().addActionListener(e -> {
+                adopterView.dispose();
+                showManagementMenu();
+            });
 
-                AdopterRepository adopterRepository =
-                        new AdopterRepository();
-
-                AdopterView adopterView =
-                        new AdopterView();
-
-                new AdopterController(
-                        adopterView,
-                        adopterRepository
-                );
-
-                adopterView.setVisible(true);
-            }
-        });
+            adopterView.setVisible(true);
+        }
     }
 }

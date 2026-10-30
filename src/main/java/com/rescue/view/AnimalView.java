@@ -19,14 +19,18 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
@@ -48,24 +52,38 @@ public class AnimalView extends JFrame {
 
     private final JTextField idField = new JTextField(20);
     private final JTextField nameField = new JTextField(20);
-    private final JTextField speciesField = new JTextField(20);
-    private final JTextField ageField = new JTextField(20);
-    private final JTextField healthField = new JTextField(20);
+    private final JComboBox<String> speciesComboBox =
+            new JComboBox<>(new String[]{
+                    "Select species...", "Dog", "Cat", "Rabbit", "Bird",
+                    "Guinea Pig", "Hamster", "Other"
+            });
+    private final JSpinner ageYearsSpinner =
+            new JSpinner(new SpinnerNumberModel(0, 0, 100, 1));
+    private final JSpinner ageMonthsSpinner =
+            new JSpinner(new SpinnerNumberModel(0, 0, 11, 1));
+    private final JComboBox<String> healthComboBox =
+            new JComboBox<>(new String[]{
+                    "Select health status...", "Healthy", "Mildly Ill", "At-Risk"
+            });
+    private final JTextArea descriptionArea = new JTextArea(3, 20);
 
     private final JCheckBox availableCheckBox =
             new JCheckBox("Available for adoption");
 
     private final JButton addButton =
-            new RoundedButton("Add Animal");
+            new RoundedButton("Add");
 
     private final JButton updateButton =
-            new RoundedButton("Update Animal");
+            new RoundedButton("Update");
 
     private final JButton deleteButton =
-            new RoundedButton("Delete Animal");
+            new RoundedButton("Delete");
 
     private final JButton clearButton =
             new RoundedButton("Clear");
+
+    private final JButton backButton =
+            new RoundedButton("← Back");
 
     private final DefaultTableModel tableModel =
             new DefaultTableModel(
@@ -75,7 +93,8 @@ public class AnimalView extends JFrame {
                             "Species",
                             "Age",
                             "Health",
-                            "Available"
+                            "Available",
+                            "Description"
                     },
                     0
             ) {
@@ -136,6 +155,10 @@ public class AnimalView extends JFrame {
         header.add(title);
         header.add(Box.createVerticalStrut(6));
         header.add(subtitle);
+        header.add(Box.createVerticalStrut(12));
+        styleButton(backButton);
+        backButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        header.add(backButton);
 
         // Form Card
         JPanel formCard =
@@ -149,17 +172,40 @@ public class AnimalView extends JFrame {
 
         styleField(idField);
         styleField(nameField);
-        styleField(speciesField);
-        styleField(ageField);
-        styleField(healthField);
+        idField.setEditable(false);
+        idField.setText("Assigned automatically");
+        idField.setToolTipText("Animal IDs are assigned automatically.");
+        styleChoice(speciesComboBox);
+        styleChoice(healthComboBox);
+        styleAgeSpinner(ageYearsSpinner);
+        styleAgeSpinner(ageMonthsSpinner);
+        descriptionArea.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        descriptionArea.setForeground(TEXT);
+        descriptionArea.setLineWrap(true);
+        descriptionArea.setWrapStyleWord(true);
+        descriptionArea.setBorder(new EmptyBorder(5, 9, 5, 9));
+
+        JPanel agePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        agePanel.setBackground(WHITE);
+        agePanel.add(ageYearsSpinner);
+        agePanel.add(new JLabel("years"));
+        agePanel.add(ageMonthsSpinner);
+        agePanel.add(new JLabel("months"));
+
+        JScrollPane descriptionScrollPane = new JScrollPane(descriptionArea);
+        descriptionScrollPane.setPreferredSize(new Dimension(250, 78));
+        descriptionScrollPane.setBorder(
+                BorderFactory.createLineBorder(new Color(205, 220, 209))
+        );
 
         int row = 0;
 
         addField(formCard, "Animal ID", idField, row++);
         addField(formCard, "Animal Name", nameField, row++);
-        addField(formCard, "Species", speciesField, row++);
-        addField(formCard, "Age", ageField, row++);
-        addField(formCard, "Health Status", healthField, row++);
+        addField(formCard, "Species", speciesComboBox, row++);
+        addField(formCard, "Age", agePanel, row++);
+        addField(formCard, "Health Status", healthComboBox, row++);
+        addField(formCard, "Description (optional)", descriptionScrollPane, row++);
 
         availableCheckBox.setBackground(WHITE);
 
@@ -298,6 +344,18 @@ public class AnimalView extends JFrame {
         );
     }
 
+        private void styleChoice(JComboBox<String> choice) {
+                choice.setFont(new Font("SansSerif", Font.PLAIN, 14));
+                choice.setForeground(TEXT);
+                choice.setBackground(WHITE);
+                choice.setPreferredSize(new Dimension(250, 38));
+        }
+
+        private void styleAgeSpinner(JSpinner spinner) {
+                spinner.setFont(new Font("SansSerif", Font.PLAIN, 14));
+                spinner.setPreferredSize(new Dimension(75, 38));
+        }
+
     private void addField(
             JPanel panel,
             String label,
@@ -358,16 +416,24 @@ public class AnimalView extends JFrame {
         return nameField;
     }
 
-    public JTextField getSpeciesField() {
-        return speciesField;
+        public JComboBox<String> getSpeciesComboBox() {
+                return speciesComboBox;
     }
 
-    public JTextField getAgeField() {
-        return ageField;
+        public JSpinner getAgeYearsSpinner() {
+                return ageYearsSpinner;
     }
 
-    public JTextField getHealthField() {
-        return healthField;
+        public JSpinner getAgeMonthsSpinner() {
+                return ageMonthsSpinner;
+        }
+
+        public JComboBox<String> getHealthComboBox() {
+                return healthComboBox;
+        }
+
+        public JTextArea getDescriptionArea() {
+                return descriptionArea;
     }
 
     public JCheckBox getAvailableCheckBox() {
@@ -389,6 +455,10 @@ public class AnimalView extends JFrame {
     public JButton getClearButton() {
         return clearButton;
     }
+
+        public JButton getBackButton() {
+                return backButton;
+        }
 
     public JTable getAnimalTable() {
         return animalTable;

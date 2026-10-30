@@ -48,81 +48,36 @@ public class AnimalController {
 
     private void addAnimal() {
 
-        try {
+        String name = view.getNameField().getText().trim();
+        String species = (String) view.getSpeciesComboBox().getSelectedItem();
+        String healthStatus = (String) view.getHealthComboBox().getSelectedItem();
 
-            int id = Integer.parseInt(
-                    view.getIdField().getText().trim()
-            );
-
-            String name =
-                    view.getNameField().getText().trim();
-
-            String species =
-                    view.getSpeciesField().getText().trim();
-
-            int age = Integer.parseInt(
-                    view.getAgeField().getText().trim()
-            );
-
-            String healthStatus =
-                    view.getHealthField().getText().trim();
-
-            boolean available =
-                    view.getAvailableCheckBox().isSelected();
-
-            if (id <= 0 || age < 0) {
-
-                view.showMessage(
-                        "ID must be positive and age cannot be negative."
-                );
-
-                return;
-            }
-
-            if (name.isEmpty()
-                    || species.isEmpty()
-                    || healthStatus.isEmpty()) {
-
-                view.showMessage(
-                        "Please fill in all fields."
-                );
-
-                return;
-            }
-
-            if (repository.findById(id).isPresent()) {
-
-                view.showMessage(
-                        "Animal ID already exists."
-                );
-
-                return;
-            }
-
-            Animal animal = new Animal(
-                    id,
-                    name,
-                    species,
-                    age,
-                    healthStatus,
-                    available
-            );
-
-            repository.save(animal);
-
-            refreshTable();
-            clearFields();
-
-            view.showMessage(
-                    "Animal added successfully!"
-            );
-
-        } catch (NumberFormatException ex) {
-
-            view.showMessage(
-                    "Please enter a valid ID and age."
-            );
+        if (name.isEmpty()) {
+            view.showMessage("Please enter an animal name.");
+            return;
         }
+
+        if (view.getSpeciesComboBox().getSelectedIndex() == 0
+                || view.getHealthComboBox().getSelectedIndex() == 0) {
+            view.showMessage("Please select a species and health status.");
+            return;
+        }
+
+        Animal animal = new Animal(
+                repository.nextId(),
+                name,
+                species,
+                (Integer) view.getAgeYearsSpinner().getValue(),
+                (Integer) view.getAgeMonthsSpinner().getValue(),
+                healthStatus,
+                view.getAvailableCheckBox().isSelected(),
+                view.getDescriptionArea().getText().trim()
+        );
+
+        repository.save(animal);
+        refreshTable();
+        clearFields();
+        view.showMessage("Animal added successfully!");
     }
 
     private void updateAnimal() {
@@ -145,36 +100,18 @@ public class AnimalController {
             String name =
                     view.getNameField().getText().trim();
 
-            String species =
-                    view.getSpeciesField().getText().trim();
-
-            int age = Integer.parseInt(
-                    view.getAgeField().getText().trim()
-            );
-
-            String healthStatus =
-                    view.getHealthField().getText().trim();
+            String species = (String) view.getSpeciesComboBox().getSelectedItem();
+            String healthStatus = (String) view.getHealthComboBox().getSelectedItem();
 
             boolean available =
                     view.getAvailableCheckBox().isSelected();
 
-            if (id <= 0 || age < 0) {
-
-                view.showMessage(
-                        "ID must be positive and age cannot be negative."
-                );
-
-                return;
-            }
-
             if (name.isEmpty()
-                    || species.isEmpty()
-                    || healthStatus.isEmpty()) {
-
+                    || view.getSpeciesComboBox().getSelectedIndex() == 0
+                    || view.getHealthComboBox().getSelectedIndex() == 0) {
                 view.showMessage(
-                        "Please fill in all fields."
+                        "Enter a name and select a species and health status."
                 );
-
                 return;
             }
 
@@ -182,9 +119,11 @@ public class AnimalController {
                     id,
                     name,
                     species,
-                    age,
+                    (Integer) view.getAgeYearsSpinner().getValue(),
+                    (Integer) view.getAgeMonthsSpinner().getValue(),
                     healthStatus,
-                    available
+                    available,
+                    view.getDescriptionArea().getText().trim()
             );
 
             repository.save(updatedAnimal);
@@ -199,7 +138,7 @@ public class AnimalController {
         } catch (NumberFormatException ex) {
 
             view.showMessage(
-                    "Please enter a valid ID and age."
+                    "Select an animal from the table before updating it."
             );
         }
     }
@@ -267,17 +206,11 @@ public class AnimalController {
                     animal.getName()
             );
 
-            view.getSpeciesField().setText(
-                    animal.getSpecies()
-            );
-
-            view.getAgeField().setText(
-                    String.valueOf(animal.getAge())
-            );
-
-            view.getHealthField().setText(
-                    animal.getHealthStatus()
-            );
+            view.getSpeciesComboBox().setSelectedItem(animal.getSpecies());
+            view.getAgeYearsSpinner().setValue(animal.getAgeYears());
+            view.getAgeMonthsSpinner().setValue(animal.getAgeMonths());
+            view.getHealthComboBox().setSelectedItem(animal.getHealthStatus());
+            view.getDescriptionArea().setText(animal.getDescription());
 
             view.getAvailableCheckBox().setSelected(
                     animal.isAvailableForAdoption()
@@ -299,9 +232,11 @@ public class AnimalController {
                             animal.getId(),
                             animal.getName(),
                             animal.getSpecies(),
-                            animal.getAge(),
+                            animal.getAgeYears() + "y "
+                                    + animal.getAgeMonths() + "m",
                             animal.getHealthStatus(),
-                            animal.isAvailableForAdoption()
+                            animal.isAvailableForAdoption(),
+                            animal.getDescription()
                     }
             );
         }
@@ -309,11 +244,13 @@ public class AnimalController {
 
     private void clearFields() {
 
-        view.getIdField().setText("");
+        view.getIdField().setText("Assigned automatically");
         view.getNameField().setText("");
-        view.getSpeciesField().setText("");
-        view.getAgeField().setText("");
-        view.getHealthField().setText("");
+        view.getSpeciesComboBox().setSelectedIndex(0);
+        view.getAgeYearsSpinner().setValue(0);
+        view.getAgeMonthsSpinner().setValue(0);
+        view.getHealthComboBox().setSelectedIndex(0);
+        view.getDescriptionArea().setText("");
 
         view.getAvailableCheckBox().setSelected(false);
 
