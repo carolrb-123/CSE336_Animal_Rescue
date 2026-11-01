@@ -44,10 +44,6 @@ public class VolunteerController {
 
     private void addVolunteer() {
         try {
-            if (!view.getIdField().getText().isBlank()) {
-                view.showMessage("Leave Volunteer ID blank when adding a new volunteer.");
-                return;
-            }
             Volunteer volunteer = readVolunteer(0);
             repository.save(volunteer);
             refreshTable();
@@ -60,9 +56,14 @@ public class VolunteerController {
 
     private void updateVolunteer() {
         try {
-            int id = parseId(view.getIdField().getText());
+            Optional<Integer> selectedId = selectedId(view.getVolunteerTable());
+            if (selectedId.isEmpty()) {
+                view.showMessage("Select a volunteer from the table to update.");
+                return;
+            }
+            int id = selectedId.get();
             if (repository.findById(id).isEmpty()) {
-                view.showMessage("Select an existing volunteer or enter a valid ID.");
+                view.showMessage("The selected volunteer no longer exists.");
                 return;
             }
             repository.save(readVolunteer(id));
@@ -104,9 +105,9 @@ public class VolunteerController {
     }
 
     private void deleteVolunteer() {
-        Optional<Integer> id = selectedOrEnteredId(view.getVolunteerTable(), view.getIdField().getText());
+        Optional<Integer> id = selectedId(view.getVolunteerTable());
         if (id.isEmpty() || repository.findById(id.get()).isEmpty()) {
-            view.showMessage("Select an existing volunteer to delete.");
+            view.showMessage("Select a volunteer from the table to delete.");
             return;
         }
         if (registrationRepository.findAll().stream()
@@ -146,7 +147,6 @@ public class VolunteerController {
         if (row < 0) return;
         int id = Integer.parseInt(view.getTableModel().getValueAt(row, 0).toString());
         repository.findById(id).ifPresent(volunteer -> {
-            view.getIdField().setText(String.valueOf(volunteer.getId()));
             view.getNameField().setText(volunteer.getName());
             view.getEmailField().setText(volunteer.getEmail());
             view.getPhoneField().setText(volunteer.getPhone());
@@ -174,14 +174,7 @@ public class VolunteerController {
                 }));
     }
 
-    private static Optional<Integer> selectedOrEnteredId(JTable table, String text) {
-        if (!text.isBlank()) {
-            try {
-                return Optional.of(parseId(text));
-            } catch (IllegalArgumentException ex) {
-                return Optional.empty();
-            }
-        }
+    private static Optional<Integer> selectedId(JTable table) {
         int row = selectedModelRow(table);
         if (row < 0) return Optional.empty();
         return Optional.of(Integer.parseInt(table.getModel().getValueAt(row, 0).toString()));
@@ -190,16 +183,6 @@ public class VolunteerController {
     private static int selectedModelRow(JTable table) {
         int selected = table.getSelectedRow();
         return selected < 0 ? -1 : table.convertRowIndexToModel(selected);
-    }
-
-    private static int parseId(String text) {
-        try {
-            int id = Integer.parseInt(text.trim());
-            if (id <= 0) throw new IllegalArgumentException("ID must be positive.");
-            return id;
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException("Enter a valid volunteer ID.");
-        }
     }
 
     private static List<String> parseList(String text) {

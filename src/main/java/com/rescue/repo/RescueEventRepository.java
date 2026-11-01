@@ -11,13 +11,12 @@ public class RescueEventRepository extends LookupTable<RescueEvent> {
 
     @Override
     public void save(RescueEvent event) {
+        DataStore store = DataStore.getInstance();
         if (event.getId() <= 0) {
-            event.setId(nextId());
+            event.setId(store.allocateEventId());
+        } else {
+            store.reserveEventId(event.getId());
         }
         super.save(event);
-    }
-
-    private int nextId() {
-        return items.keySet().stream().mapToInt(Integer::intValue).max().orElse(0) + 1;
     }
 }

@@ -11,13 +11,12 @@ public class VolunteerRepository extends LookupTable<Volunteer> {
 
     @Override
     public void save(Volunteer volunteer) {
+        DataStore store = DataStore.getInstance();
         if (volunteer.getId() <= 0) {
-            volunteer.setId(nextId());
+            volunteer.setId(store.allocateVolunteerId());
+        } else {
+            store.reserveVolunteerId(volunteer.getId());
         }
         super.save(volunteer);
-    }
-
-    private int nextId() {
-        return items.keySet().stream().mapToInt(Integer::intValue).max().orElse(0) + 1;
     }
 }

@@ -32,16 +32,15 @@ public class EventView extends JFrame {
 
     private static final long serialVersionUID = 1L;
     private final JButton backButton = new JButton("Back to Menu");
-    private final JTextField idField = new JTextField(20);
     private final JTextField nameField = new JTextField(20);
     private final JTextField typeField = new JTextField(20);
     private final JTextField dateField = new JTextField(20);
     private final JTextField locationField = new JTextField(20);
     private final JTextField skillsField = new JTextField(20);
     private final JTextField descriptionField = new JTextField(20);
-    private final JButton addButton = new RoundedButton("Add Event");
-    private final JButton updateButton = new RoundedButton("Update Event");
-    private final JButton deleteButton = new RoundedButton("Delete Event");
+    private final JButton addButton = new RoundedButton("Add");
+    private final JButton updateButton = new RoundedButton("Update");
+    private final JButton deleteButton = new RoundedButton("Delete");
     private final JButton clearButton = new RoundedButton("Clear");
     private final DefaultTableModel tableModel = new DefaultTableModel(
             new String[]{"ID", "Event", "Type", "Date", "Location", "Required Skills", "Description"}, 0) {
@@ -59,9 +58,9 @@ public class EventView extends JFrame {
     private final JComboBox<Volunteer> volunteerBox = new JComboBox<>();
     private final JComboBox<String> statusBox =
             new JComboBox<>(new String[]{"Registered", "Confirmed", "Completed", "Cancelled"});
-    private final JButton addRegistrationButton = new RoundedButton("Add Registration");
-    private final JButton updateRegistrationButton = new RoundedButton("Update Registration");
-    private final JButton deleteRegistrationButton = new RoundedButton("Delete Registration");
+    private final JButton addRegistrationButton = new RoundedButton("Add");
+    private final JButton updateRegistrationButton = new RoundedButton("Update");
+    private final JButton deleteRegistrationButton = new RoundedButton("Delete");
     private final JButton clearRegistrationButton = new RoundedButton("Clear");
     private final DefaultTableModel registrationTableModel = new DefaultTableModel(
             new String[]{"ID", "Event", "Volunteer", "Status", "Registered At"}, 0) {
@@ -96,6 +95,7 @@ public class EventView extends JFrame {
         mainPanel.add(header, BorderLayout.NORTH);
         mainPanel.add(tabs, BorderLayout.CENTER);
         setContentPane(mainPanel);
+        setSize(1100, 850);
         setLocationRelativeTo(null);
     }
 
@@ -107,13 +107,12 @@ public class EventView extends JFrame {
         JPanel formCard = new JPanel(new GridBagLayout());
         formCard.setBackground(WHITE);
         formCard.setBorder(new EmptyBorder(22, 22, 22, 22));
-        for (JTextField field : new JTextField[]{idField, nameField, typeField, dateField,
+        for (JTextField field : new JTextField[]{nameField, typeField, dateField,
                 locationField, skillsField, descriptionField}) {
             styleField(field);
         }
 
         int row = 0;
-        addField(formCard, "Event ID", idField, row++);
         addField(formCard, "Event Name", nameField, row++);
         addField(formCard, "Event Type", typeField, row++);
         addField(formCard, "Date (YYYY-MM-DD)", dateField, row++);
@@ -209,7 +208,7 @@ public class EventView extends JFrame {
 
     private static void styleButton(JButton button) {
         button.setFont(BUTTON);
-        button.setPreferredSize(new Dimension(180, 42));
+        button.setPreferredSize(new Dimension(110, 42));
     }
 
     private void styleField(JTextField field) {
@@ -233,7 +232,6 @@ public class EventView extends JFrame {
     }
 
     public void clearEventFields() {
-        idField.setText("");
         nameField.setText("");
         typeField.setText("");
         dateField.setText("");
@@ -252,7 +250,6 @@ public class EventView extends JFrame {
     }
 
     public JButton getBackButton() { return backButton; }
-    public JTextField getIdField() { return idField; }
     public JTextField getNameField() { return nameField; }
     public JTextField getTypeField() { return typeField; }
     public JTextField getDateField() { return dateField; }
