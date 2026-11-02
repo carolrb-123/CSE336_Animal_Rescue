@@ -8,23 +8,33 @@ import com.rescue.model.Entity;
 
 public class LookupTable<T extends Entity> implements Repository<T> {
 
-
     protected final Map<Integer, T> items;
-
 
     public LookupTable(Map<Integer, T> items) {
         this.items = items;
     }
 
-    @Override
-    public void save(T item) { items.put(item.getId(), item); }
+    public synchronized int nextId() {
+        return items.keySet().stream().mapToInt(Integer::intValue).max().orElse(0) + 1;
+    }
 
     @Override
-    public Optional<T> findById(int id) { return Optional.ofNullable(items.get(id)); }
+    public void save(T item) {
+        items.put(item.getId(), item);
+    }
 
     @Override
-    public List<T> findAll() { return new ArrayList<>(items.values()); }
+    public Optional<T> findById(int id) {
+        return Optional.ofNullable(items.get(id));
+    }
 
     @Override
-    public void delete(int id) { items.remove(id); }
+    public List<T> findAll() {
+        return new ArrayList<>(items.values());
+    }
+
+    @Override
+    public void delete(int id) {
+        items.remove(id);
+    }
 }
