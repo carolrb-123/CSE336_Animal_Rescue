@@ -53,16 +53,19 @@ public class AdopterView extends JFrame {
     private final JButton  backBtn =
             new JButton("Back to Menu");
     private final JButton addButton =
-            new RoundedButton("Add Adopter");
+            new RoundedButton("Add");
 
     private final JButton updateButton =
-            new RoundedButton("Update Adopter");
+            new RoundedButton("Update");
 
     private final JButton deleteButton =
-            new RoundedButton("Delete Adopter");
+            new RoundedButton("Delete");
 
     private final JButton clearButton =
             new RoundedButton("Clear");
+
+    private final JButton backButton =
+            new RoundedButton("← Back");
 
     private final DefaultTableModel tableModel =
             new DefaultTableModel(
@@ -132,6 +135,10 @@ public class AdopterView extends JFrame {
         header.add(title);
         header.add(Box.createVerticalStrut(6));
         header.add(subtitle);
+        header.add(Box.createVerticalStrut(12));
+        styleButton(backButton);
+        backButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        header.add(backButton);
 
         // Form Card
         JPanel formCard =
@@ -150,6 +157,9 @@ public class AdopterView extends JFrame {
 
         int row = 0;
 
+        idField.setEditable(false);
+        idField.setText("Assigned automatically");
+        idField.setToolTipText("Adopter IDs are assigned automatically.");
         addField(formCard, "Adopter ID", idField, row++);
         addField(formCard, "Adopter Name", nameField, row++);
         addField(formCard, "Email Address", emailField, row++);
@@ -364,6 +374,10 @@ public class AdopterView extends JFrame {
     public JButton getClearButton() {
         return clearButton;
     }
+
+        public JButton getBackButton() {
+                return backButton;
+        }
 
     public JTable getAdopterTable() {
         return adopterTable;
