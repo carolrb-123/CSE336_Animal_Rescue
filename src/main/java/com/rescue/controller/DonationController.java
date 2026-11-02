@@ -4,6 +4,8 @@ package com.rescue.controller;
 import com.rescue.model.Donor;
 import com.rescue.model.Donation;
 import com.rescue.factory.DonationFactory;
+import com.rescue.model.InMemoryOfDonation;
+import com.rescue.model.RecurringDonation;
 import com.rescue.repo.DonationRepository;
 import com.rescue.repo.DonorRepository;
 import com.rescue.view.DonationView;
@@ -42,9 +44,6 @@ public class DonationController {
                 return;
             }
 
-            if (view.isRecurringSelected()) {
-                receipt += " | Recurring donation";
-            }
 
             if (view.isInMemoryOfSelected()) {
                 receipt += " | In memory of: " + view.getMemoryName();
@@ -75,7 +74,12 @@ public class DonationController {
             Donation donation =
                     DonationFactory.createDonation(type, donor, amount, receipt);
 
-            // Save the donation; its ID is assigned automatically.
+            if (view.isRecurringSelected()) {
+                donation = new RecurringDonation(donation);
+            }
+            if (view.isInMemoryOfSelected()) {
+                donation = new InMemoryOfDonation(donation, view.getMemoryName());
+            }
             donationRepository.save(donation);
 
             view.displayDonation(
