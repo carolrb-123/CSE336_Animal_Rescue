@@ -67,16 +67,16 @@ The application is divided into functional modules, all accessible via the centr
 
 ## 👥 Team Contributions (Phase 1)
 
-* **Member A (Tech Lead):** Infrastructure, Singletons (`DataStore`/`AppConfig`), User Control Panel (CRUD), Final UI Integration.
+* **Carol Rimoun:** Infrastructure, Singletons (`DataStore`/`AppConfig`), User Control Panel (CRUD), Final UI Integration.
 
-* **Member B:** Donation Management (Factory & Decorator Patterns).
+* **Farida Tawfik:** Donation Management (Factory & Decorator Patterns).
 
-* **Member C:** Communication Module (Strategy & Observer Patterns).
+* **George Mourad:** Communication Module (Strategy & Observer Patterns).
 
-* **Member D:** Volunteer & Event Management (Volunteer Matching Strategy).
+* **Boulos Aziz:** Volunteer & Event Management (Volunteer Matching Strategy).
 
-* **Member E:** Beneficiary Management (Animals & Adopters) & Generic CRUD Lookup Tables.
+* **Maryam Saad:** Beneficiary Management (Animals & Adopters) & Generic CRUD Lookup Tables.
 
-* **Member F:** Documentation, QA, LMS Client Requirements, and Class Diagram Generation.
+* **Youssef Amr:** Documentation, QA, LMS Client Requirements, and Class Diagram Generation.
 
 *Developed for CSE336 Phase 1.*
