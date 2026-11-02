@@ -17,7 +17,5 @@ public class EventRegistrationRepository extends LookupTable<EventRegistration> 
         super.save(registration);
     }
 
-    private int nextId() {
-        return items.keySet().stream().mapToInt(Integer::intValue).max().orElse(0) + 1;
-    }
+
 }
