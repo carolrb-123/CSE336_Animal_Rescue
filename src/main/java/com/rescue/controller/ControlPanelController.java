@@ -16,6 +16,8 @@ public class ControlPanelController {
         view.getAnimalBtn().addActionListener(e -> openAnimalModule());
         view.getAdopterBtn().addActionListener(e -> openAdopterModule());
         view.getDonationBtn().addActionListener(e -> openDonationModule());
+        view.getVolunteerBtn().addActionListener(e -> openVolunteerModule());
+        view.getEventBtn().addActionListener(e -> openEventModule());
     }
 
     private void openAnimalModule() {
@@ -34,5 +36,21 @@ public class ControlPanelController {
         DonationView donationView = new DonationView();
         new DonationController(donationView, new DonationRepository(), new DonorRepository());
         donationView.setVisible(true);
+    }
+
+    private void openVolunteerModule() {
+        VolunteerView volunteerView = new VolunteerView();
+        new VolunteerController(volunteerView, new VolunteerRepository(), new EventRegistrationRepository());
+        volunteerView.setVisible(true);
+    }
+
+    private void openEventModule() {
+        EventView eventView = new EventView();
+        new EventController(
+                eventView,
+                new RescueEventRepository(),
+                new VolunteerRepository(),
+                new EventRegistrationRepository());
+        eventView.setVisible(true);
     }
 }
