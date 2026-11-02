@@ -78,7 +78,13 @@ public class CommunicationView extends JFrame {
         center.add(buildFormCard(), BorderLayout.NORTH);
         center.add(buildHistory(), BorderLayout.CENTER);
 
-        mainPanel.add(header("Communication"), BorderLayout.NORTH);
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(LIGHT_GREEN);
+        headerPanel.add(header("Communication"), BorderLayout.CENTER);
+        backBtn.setFont(FIELD);
+        headerPanel.add(backBtn, BorderLayout.EAST);
+
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
         mainPanel.add(center, BorderLayout.CENTER);
 
         setContentPane(mainPanel);

@@ -1,7 +1,9 @@
 package com.rescue.controller;
 
+import com.rescue.service.CommunicationModule;
 import com.rescue.view.*;
 import com.rescue.repo.*;
+
 
 public class ControlPanelController {
     private ControlPanelView view;
@@ -18,6 +20,9 @@ public class ControlPanelController {
         view.getDonationBtn().addActionListener(e -> openDonationModule());
         view.getVolunteerBtn().addActionListener(e -> openVolunteerModule());
         view.getEventBtn().addActionListener(e -> openEventModule());
+        view.getUserMgmtBtn().addActionListener(e -> openUserModule());
+        view.getCommsBtn().addActionListener(e -> openCommunicationModule());
+
     }
 
     private void openAnimalModule() {
@@ -52,5 +57,17 @@ public class ControlPanelController {
                 new VolunteerRepository(),
                 new EventRegistrationRepository());
         eventView.setVisible(true);
+    }
+
+    private void openUserModule() {
+        UserManagementView userView = new UserManagementView();
+        new UserManagementController(userView, new UserRepository());
+        userView.setVisible(true);
+    }
+
+    private void openCommunicationModule() {
+        CommunicationModule module = new CommunicationModule();
+        CommunicationController commsController = module.createController();
+        commsController.getView().setVisible(true);
     }
 }

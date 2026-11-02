@@ -53,25 +53,29 @@ public class DonationView extends JFrame {
         mainPanel.setBackground(LIGHT_GREEN);
         mainPanel.setBorder(new EmptyBorder(25, 30, 25, 30));
 
-        // Header
-        JPanel header = new JPanel();
-        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
+// Header
+        JPanel header = new JPanel(new BorderLayout());
         header.setBackground(LIGHT_GREEN);
+
+        JPanel titleBox = new JPanel();
+        titleBox.setLayout(new BoxLayout(titleBox, BoxLayout.Y_AXIS));
+        titleBox.setBackground(LIGHT_GREEN);
 
         JLabel title = new JLabel("Animal Rescue");
         title.setFont(new Font("SansSerif", Font.BOLD, 28));
         title.setForeground(DARK_GREEN);
-        title.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel subtitle = new JLabel("Donation Management");
         subtitle.setFont(new Font("SansSerif", Font.PLAIN, 15));
         subtitle.setForeground(GREEN);
-        subtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        header.add(title);
-        header.add(Box.createVerticalStrut(6));
-        header.add(subtitle);
+        titleBox.add(title);
+        titleBox.add(Box.createVerticalStrut(6));
+        titleBox.add(subtitle);
 
+        header.add(titleBox, BorderLayout.CENTER);
+        backBtn.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        header.add(backBtn, BorderLayout.EAST);
         // Form card
         JPanel formCard = new JPanel(new GridBagLayout());
         formCard.setBackground(WHITE);
