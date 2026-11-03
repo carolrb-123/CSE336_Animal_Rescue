@@ -82,9 +82,3 @@ As a rescue coordinator, I want relevant observers to respond to important anima
 As a system administrator, I want to manage user records, so that the organization can maintain its system users in an organized way.
 
 ---
-
-## Summary
-
-These requirements cover the main users and activities of the Animal Rescue Management System. They focus on managing rescued animals, adopters, donations, volunteers, events, communication, and system users.
-
-The requirements are intended to reflect the functionality and design already present in the project rather than introduce unrelated features.
