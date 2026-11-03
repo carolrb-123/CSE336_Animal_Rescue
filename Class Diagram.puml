@@ -31,6 +31,10 @@ package "com.rescue.model" {
     - email : String
     - phone : String
   }
+  class VolunteerOptions <<utility>> {
+    {static} + SKILLS : List<String>
+    {static} + AVAILABILITIES : List<String>
+  }
   class Volunteer {
     - id : int
     - name : String
@@ -49,6 +53,7 @@ package "com.rescue.model" {
     - date : LocalDate
     - location : String
     - requiredSkills : List<String>
+    - hours : double
     - description : String
   }
   class EventRegistration {
@@ -126,7 +131,7 @@ Entity <|.. Volunteer
 Entity <|.. RescueEvent
 Entity <|.. EventRegistration
 Entity <|.. User
-Entity <|.. Donation
+Entity <|-- Donation
 Donation <|.. BaseDonation
 BaseDonation <|-- OnlineDonation
 BaseDonation <|-- ChequeDonation
@@ -140,6 +145,10 @@ Recipient <|.. Donor
 BaseDonation --> Donor
 SentMessage --> Recipient
 ActivityFeed o-- SentMessage
+EventRegistration ..> RescueEvent
+EventRegistration ..> Volunteer
+Volunteer ..> VolunteerOptions
+RescueEvent ..> VolunteerOptions
 DataStore ..> Animal
 DataStore ..> Adopter
 DataStore ..> Donation
@@ -263,6 +272,7 @@ ChannelStrategy <|-- SmsStrategy
 ChannelStrategy <|-- SocialPostStrategy
 VolunteerMatchingStrategy <|.. SkillMatchingStrategy
 VolunteerMatchingStrategy <|.. AvailabilityMatchingStrategy
+VolunteerMatchingStrategy ..> Volunteer : matches
 Notifier o-- ChannelStrategy
 ChannelStrategy ..> MessageGateway
 MessageGateway <|.. ConsoleGateway
@@ -325,12 +335,14 @@ AdopterController ..> AdopterRepository
 DonationController ..> DonationRepository
 DonationController ..> DonorRepository
 DonationController ..> DonationFactory
-VolunteerController ..> VolunteerRepository
-VolunteerController ..> EventRegistrationRepository
-VolunteerController ..> VolunteerMatchingStrategy
-EventController ..> RescueEventRepository
-EventController ..> VolunteerRepository
-EventController ..> EventRegistrationRepository
+VolunteerController ..> VolunteerRepository : uses
+VolunteerController ..> RescueEventRepository : uses
+VolunteerController ..> EventRegistrationRepository : uses
+VolunteerController ..> VolunteerMatchingStrategy : uses
+VolunteerController ..> VolunteerOptions
+EventController ..> RescueEventRepository : uses
+EventController ..> VolunteerRepository : uses
+EventController ..> EventRegistrationRepository : uses
 UserManagementController ..> UserRepository
 CommunicationController ..> Notifier
 CommunicationController ..> ActivityFeed
@@ -360,6 +372,14 @@ note right of AppConfig
   Lazy Singleton accessor.
   Stores organisation name and contact email.
 end note
+note right of EventRegistration
+  Stores eventId and volunteerId to link one
+  Volunteer registration to one RescueEvent.
+  These are ID-based links, so dependencies
+  are shown rather than object associations.
+  Events and volunteers with registrations
+  cannot be deleted.
+end note
 note right of CommunicationModule
   The module has connect* methods,
   but ControlPanelController's normal
@@ -371,10 +391,15 @@ note right of CommunicationModule
   integration without wiring/testing it.
 end note
 legend bottom
-  Phase 1 pattern set:
-  MVC | Strategy | Observer | Decorator | Factory | Singleton
+  Phase 1 design elements (MVC + five GoF patterns):
+  1. MVC (architectural pattern, not a GoF pattern)
+  2. Singleton (GoF)  - DataStore, AppConfig
+  3. Factory (GoF)    - DonationFactory
+  4. Decorator (GoF)  - DonationDecorator, RecurringDonation, InMemoryOfDonation
+  5. Strategy (GoF)   - ChannelStrategy family, VolunteerMatchingStrategy family
+  6. Observer (GoF)   - Subject / Observer and observer classes
 
-  Phase 2 (planned; not present as implemented classes in this main tree):
+  Phase 2 (planned only; not implemented in this main tree):
   Command | Adapter | Facade | Template Method | Iterator | State | Proxy
 endlegend
 @enduml
