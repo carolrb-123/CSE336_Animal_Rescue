@@ -12,9 +12,10 @@ public class RescueEvent implements Entity {
     private final String location;
     private final List<String> requiredSkills;
     private final String description;
+    private final double hours;
 
     public RescueEvent(int id, String name, String type, LocalDate date, String location,
-                       List<String> requiredSkills, String description) {
+                       List<String> requiredSkills, String description, double hours) {
         this.id = id;
         this.name = name;
         this.type = type;
@@ -22,6 +23,7 @@ public class RescueEvent implements Entity {
         this.location = location;
         this.requiredSkills = List.copyOf(requiredSkills);
         this.description = description;
+        this.hours = hours;
     }
 
     @Override
@@ -55,6 +57,10 @@ public class RescueEvent implements Entity {
 
     public String getDescription() {
         return description;
+    }
+
+    public double getHours() {
+        return hours;
     }
 
     @Override

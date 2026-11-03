@@ -11,10 +11,8 @@ import javax.swing.JTable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class EventController {
 
@@ -84,18 +82,26 @@ public class EventController {
 
     private RescueEvent readEvent(int id) {
         String name = view.getNameField().getText().trim();
-        String type = view.getTypeField().getText().trim();
+        String type = (String) view.getTypeBox().getSelectedItem();
         String dateText = view.getDateField().getText().trim();
         String location = view.getLocationField().getText().trim();
-        List<String> skills = parseList(view.getSkillsField().getText());
+        List<String> skills = view.getSkillsList().getSelectedValuesList();
         String description = view.getDescriptionField().getText().trim();
+        String hoursText = view.getHoursField().getText().trim();
         if (name.isEmpty() || type.isEmpty() || dateText.isEmpty()
-                || location.isEmpty() || description.isEmpty()) {
-            throw new IllegalArgumentException("Please fill in the event name, type, date, location, and description.");
+                || location.isEmpty() || description.isEmpty() || hoursText.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Please fill in the event name, type, date, location, description, and hours.");
         }
         try {
+            double hours = Double.parseDouble(hoursText);
+            if (!Double.isFinite(hours) || hours <= 0) {
+                throw new IllegalArgumentException("Event hours must be greater than zero.");
+            }
             return new RescueEvent(id, name, type, LocalDate.parse(dateText),
-                    location, skills, description);
+                    location, skills, description, hours);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("Enter a numeric value for event hours.");
         } catch (DateTimeParseException ex) {
             throw new IllegalArgumentException("Enter the event date in YYYY-MM-DD format.");
         }
@@ -183,11 +189,18 @@ public class EventController {
         int id = Integer.parseInt(view.getTableModel().getValueAt(row, 0).toString());
         eventRepository.findById(id).ifPresent(event -> {
             view.getNameField().setText(event.getName());
-            view.getTypeField().setText(event.getType());
+            view.getTypeBox().setSelectedItem(event.getType());
             view.getDateField().setText(event.getDate().toString());
             view.getLocationField().setText(event.getLocation());
-            view.getSkillsField().setText(String.join(", ", event.getRequiredSkills()));
+            view.getSkillsList().clearSelection();
+            event.getRequiredSkills().forEach(skill -> {
+                int index = com.rescue.model.VolunteerOptions.SKILLS.indexOf(skill);
+                if (index >= 0) {
+                    view.getSkillsList().addSelectionInterval(index, index);
+                }
+            });
             view.getDescriptionField().setText(event.getDescription());
+            view.getHoursField().setText(String.valueOf(event.getHours()));
         });
     }
 
@@ -227,7 +240,8 @@ public class EventController {
                         event.getDate(),
                         event.getLocation(),
                         String.join(", ", event.getRequiredSkills()),
-                        event.getDescription()
+                        event.getDescription(),
+                        event.getHours()
                 }));
 
         view.setRegistrationOptions(eventRepository.findAll(), volunteerRepository.findAll());
@@ -278,11 +292,4 @@ public class EventController {
         }
     }
 
-    private static List<String> parseList(String text) {
-        return Arrays.stream(text.split(","))
-                .map(String::trim)
-                .filter(value -> !value.isEmpty())
-                .distinct()
-                .collect(Collectors.toList());
-    }
 }

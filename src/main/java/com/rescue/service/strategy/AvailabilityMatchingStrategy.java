@@ -15,9 +15,8 @@ public class AvailabilityMatchingStrategy implements VolunteerMatchingStrategy {
     public List<Volunteer> match(List<Volunteer> volunteers, String criterion) {
         String availability = criterion.trim();
         return volunteers.stream()
-                .filter(volunteer -> volunteer.getAvailability()
-                        .toLowerCase()
-                        .contains(availability.toLowerCase()))
+                .filter(volunteer -> volunteer.getAvailability().stream()
+                        .anyMatch(existing -> existing.equalsIgnoreCase(availability)))
                 .toList();
     }
 }

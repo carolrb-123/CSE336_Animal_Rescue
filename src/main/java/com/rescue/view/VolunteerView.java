@@ -1,6 +1,7 @@
 package com.rescue.view;
 
 import com.rescue.service.strategy.VolunteerMatchingStrategy;
+import com.rescue.model.VolunteerOptions;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -10,9 +11,11 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JList;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.DefaultListSelectionModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
@@ -34,17 +37,17 @@ public class VolunteerView extends JFrame {
     private final JTextField nameField = new JTextField(20);
     private final JTextField emailField = new JTextField(20);
     private final JTextField phoneField = new JTextField(20);
-    private final JTextField skillsField = new JTextField(20);
-    private final JTextField availabilityField = new JTextField(20);
-    private final JTextField roleField = new JTextField(20);
-    private final JTextField hoursField = new JTextField(20);
+    private final JList<String> skillsList = new JList<>(
+            VolunteerOptions.SKILLS.toArray(String[]::new));
+    private final JList<String> availabilityList = new JList<>(
+            VolunteerOptions.AVAILABILITIES.toArray(String[]::new));
     private final JTextField certificatesField = new JTextField(20);
     private final JButton addButton = new RoundedButton("Add");
     private final JButton updateButton = new RoundedButton("Update");
     private final JButton deleteButton = new RoundedButton("Delete");
     private final JButton clearButton = new RoundedButton("Clear");
     private final DefaultTableModel tableModel = new DefaultTableModel(
-            new String[]{"ID", "Name", "Email", "Phone", "Skills", "Availability", "Role", "Hours", "Certificates"}, 0) {
+            new String[]{"ID", "Name", "Email", "Phone", "Skills", "Availability", "Completed Hours", "Certificates"}, 0) {
         private static final long serialVersionUID = 1L;
 
         @Override
@@ -55,10 +58,10 @@ public class VolunteerView extends JFrame {
     private final JTable volunteerTable = new JTable(tableModel);
 
     private final JComboBox<VolunteerMatchingStrategy> strategyBox = new JComboBox<>();
-    private final JTextField matchCriterionField = new JTextField(20);
+    private final JComboBox<String> matchCriterionBox = new JComboBox<>();
     private final JButton matchButton = new RoundedButton("Match");
     private final DefaultTableModel matchTableModel = new DefaultTableModel(
-            new String[]{"ID", "Name", "Skills", "Availability", "Role", "Hours"}, 0) {
+            new String[]{"ID", "Name", "Skills", "Availability", "Completed Hours"}, 0) {
         private static final long serialVersionUID = 1L;
 
         @Override
@@ -71,7 +74,7 @@ public class VolunteerView extends JFrame {
     public VolunteerView() {
         setTitle("Animal Rescue | Volunteers");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setMinimumSize(new Dimension(950, 820));
+        setMinimumSize(new Dimension(950, 700));
 
         JPanel mainPanel = new JPanel(new BorderLayout(0, 20));
         mainPanel.setBackground(LIGHT_GREEN);
@@ -84,13 +87,13 @@ public class VolunteerView extends JFrame {
         header.add(backButton, BorderLayout.EAST);
 
         JTabbedPane tabs = new JTabbedPane();
-        tabs.addTab("Volunteers", buildVolunteerPanel());
-        tabs.addTab("Volunteer Matching", buildMatchingPanel());
+        tabs.addTab("Volunteers", scrollable(buildVolunteerPanel()));
+        tabs.addTab("Volunteer Matching", scrollable(buildMatchingPanel()));
 
         mainPanel.add(header, BorderLayout.NORTH);
         mainPanel.add(tabs, BorderLayout.CENTER);
         setContentPane(mainPanel);
-        setSize(1100, 900);
+        setSize(1100, 760);
         setLocationRelativeTo(null);
     }
 
@@ -102,19 +105,19 @@ public class VolunteerView extends JFrame {
         JPanel formCard = new JPanel(new GridBagLayout());
         formCard.setBackground(WHITE);
         formCard.setBorder(new EmptyBorder(22, 22, 22, 22));
-        for (JTextField field : new JTextField[]{nameField, emailField, phoneField,
-                skillsField, availabilityField, roleField, hoursField, certificatesField}) {
+        for (JTextField field : new JTextField[]{nameField, emailField, phoneField, certificatesField}) {
             styleField(field);
         }
+        styleMultiSelectList(skillsList, 6);
+        styleMultiSelectList(availabilityList, 3);
 
         int row = 0;
         addField(formCard, "Volunteer Name", nameField, row++);
         addField(formCard, "Email Address", emailField, row++);
         addField(formCard, "Phone Number", phoneField, row++);
-        addField(formCard, "Skills (comma-separated)", skillsField, row++);
-        addField(formCard, "Availability", availabilityField, row++);
-        addField(formCard, "Role", roleField, row++);
-        addField(formCard, "Completed Hours", hoursField, row++);
+        addField(formCard, "Skills (select one or more)", new JScrollPane(skillsList), row++);
+        addField(formCard, "Availability (select one or more)",
+                new JScrollPane(availabilityList), row++);
         addField(formCard, "Certificates (comma-separated)", certificatesField, row++);
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
@@ -150,9 +153,9 @@ public class VolunteerView extends JFrame {
         formCard.setBackground(WHITE);
         formCard.setBorder(new EmptyBorder(22, 22, 22, 22));
         styleCombo(strategyBox);
-        styleField(matchCriterionField);
+        styleCombo(matchCriterionBox);
         addField(formCard, "Matching Strategy", strategyBox, 0);
-        addField(formCard, "Skill or Availability", matchCriterionField, 1);
+        addField(formCard, "Match Option", matchCriterionBox, 1);
         styleButton(matchButton);
         GridBagConstraints buttonConstraints = new GridBagConstraints();
         buttonConstraints.gridx = 0;
@@ -178,22 +181,68 @@ public class VolunteerView extends JFrame {
         table.setGridColor(SECTION_BORDER);
         table.setSelectionBackground(LIGHT_GREEN);
         table.setSelectionForeground(DARK_GREEN);
-        table.setRowHeight(25);
+        table.setRowHeight(34);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getTableHeader().setFont(LABEL);
         table.getTableHeader().setBackground(WHITE);
         table.getTableHeader().setForeground(TEXT);
+        table.getTableHeader().setPreferredSize(new Dimension(0, 32));
+        table.setAutoCreateRowSorter(true);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        setColumnWidths(table);
         table.setFillsViewportHeight(true);
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createLineBorder(SECTION_BORDER));
+        scrollPane.setPreferredSize(new Dimension(0, 260));
         tablePanel.add(scrollPane, BorderLayout.CENTER);
         return tablePanel;
     }
 
+    private static JScrollPane scrollable(JPanel panel) {
+        JScrollPane scrollPane = new JScrollPane(panel,
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        return scrollPane;
+    }
+
+    private static void styleMultiSelectList(JList<String> list, int visibleRows) {
+        list.setVisibleRowCount(visibleRows);
+        list.setSelectionModel(new ToggleSelectionModel());
+        list.setFont(FIELD);
+        list.setForeground(TEXT);
+        list.setBackground(WHITE);
+        list.setBorder(BorderFactory.createLineBorder(FIELD_BORDER));
+    }
+
+    private static final class ToggleSelectionModel extends DefaultListSelectionModel {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void setSelectionInterval(int index0, int index1) {
+            if (index0 == index1 && isSelectedIndex(index0)) {
+                removeSelectionInterval(index0, index1);
+            } else {
+                addSelectionInterval(index0, index1);
+            }
+        }
+    }
+
+    private static void setColumnWidths(JTable table) {
+        int[] widths = table.getColumnCount() == 8
+                ? new int[]{45, 145, 210, 125, 280, 280, 120, 190}
+                : new int[]{45, 145, 280, 280, 120};
+        for (int column = 0; column < widths.length; column++) {
+            table.getColumnModel().getColumn(column).setPreferredWidth(widths[column]);
+        }
+    }
+
     private static void styleButton(JButton button) {
         button.setFont(BUTTON);
-        button.setPreferredSize(new Dimension(110, 42));
+        button.setPreferredSize(new Dimension(150, 42));
     }
 
     private void styleField(JTextField field) {
@@ -215,6 +264,11 @@ public class VolunteerView extends JFrame {
         });
     }
 
+    public void setMatchOptions(List<String> options) {
+        matchCriterionBox.removeAllItems();
+        options.forEach(matchCriterionBox::addItem);
+    }
+
     public void showMessage(String message) {
         JOptionPane.showMessageDialog(this, message);
     }
@@ -223,10 +277,8 @@ public class VolunteerView extends JFrame {
         nameField.setText("");
         emailField.setText("");
         phoneField.setText("");
-        skillsField.setText("");
-        availabilityField.setText("");
-        roleField.setText("");
-        hoursField.setText("");
+        skillsList.clearSelection();
+        availabilityList.clearSelection();
         certificatesField.setText("");
         volunteerTable.clearSelection();
     }
@@ -239,10 +291,8 @@ public class VolunteerView extends JFrame {
     public JTextField getNameField() { return nameField; }
     public JTextField getEmailField() { return emailField; }
     public JTextField getPhoneField() { return phoneField; }
-    public JTextField getSkillsField() { return skillsField; }
-    public JTextField getAvailabilityField() { return availabilityField; }
-    public JTextField getRoleField() { return roleField; }
-    public JTextField getHoursField() { return hoursField; }
+    public JList<String> getSkillsList() { return skillsList; }
+    public JList<String> getAvailabilityList() { return availabilityList; }
     public JTextField getCertificatesField() { return certificatesField; }
     public JButton getAddButton() { return addButton; }
     public JButton getUpdateButton() { return updateButton; }
@@ -251,7 +301,7 @@ public class VolunteerView extends JFrame {
     public DefaultTableModel getTableModel() { return tableModel; }
     public JTable getVolunteerTable() { return volunteerTable; }
     public JComboBox<VolunteerMatchingStrategy> getStrategyBox() { return strategyBox; }
-    public JTextField getMatchCriterionField() { return matchCriterionField; }
+    public JComboBox<String> getMatchCriterionBox() { return matchCriterionBox; }
     public JButton getMatchButton() { return matchButton; }
     public DefaultTableModel getMatchTableModel() { return matchTableModel; }
 }
