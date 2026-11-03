@@ -1,0 +1,380 @@
+@startuml
+title Animal Rescue Management System — Class Diagram (current main)
+left to right direction
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+package "com.rescue.model" {
+  interface Entity {
+    + getId() : int
+  }
+  class Animal {
+    - id : int
+    - name : String
+    - species : String
+    - ageYears : int
+    - ageMonths : int
+    - healthStatus : String
+    - availableForAdoption : boolean
+    - description : String
+  }
+  class Adopter {
+    - id : int
+    - name : String
+    - email : String
+    - phone : String
+  }
+  class Donor {
+    - id : int
+    - name : String
+    - email : String
+    - phone : String
+  }
+  class Volunteer {
+    - id : int
+    - name : String
+    - email : String
+    - phone : String
+    - skills : List<String>
+    - availability : String
+    - role : String
+    - hours : double
+    - certificates : List<String>
+  }
+  class RescueEvent {
+    - id : int
+    - name : String
+    - type : String
+    - date : LocalDate
+    - location : String
+    - requiredSkills : List<String>
+    - description : String
+  }
+  class EventRegistration {
+    - id : int
+    - eventId : int
+    - volunteerId : int
+    - status : String
+    - registeredAt : LocalDateTime
+  }
+  class User {
+    - id : int
+    - username : String
+    - password : String
+    - role : String
+  }
+
+  interface Donation {
+    + setId(id : int)
+    + getAmount() : double
+    + getReceiptText() : String
+    + getDonor() : Donor
+  }
+  abstract class BaseDonation {
+    - id : int
+    - donor : Donor
+    - amount : double
+    - receiptText : String
+  }
+  class OnlineDonation
+  class ChequeDonation
+  class InKindDonation
+  abstract class DonationDecorator {
+    # donation : Donation
+  }
+  class RecurringDonation
+  class InMemoryOfDonation {
+    - personName : String
+  }
+
+  interface Recipient
+  class Contact {
+    - name : String
+    - email : String
+    - phone : String
+    + PUBLIC_AUDIENCE : Contact
+  }
+  enum RecipientType
+  enum ChannelType
+  class SentMessage
+  class ActivityFeed
+  class AppConfig <<Singleton>> {
+    - instance : AppConfig
+    - orgName : String
+    - contactEmail : String
+    + getInstance() : AppConfig
+  }
+  class DataStore <<Singleton>> {
+    - instance : DataStore
+    - animals : Map
+    - adopters : Map
+    - donations : Map
+    - donors : Map
+    - volunteers : Map
+    - events : Map
+    - eventRegistrations : Map
+    - users : Map
+    - sentMessages : Map
+    + getInstance() : DataStore
+  }
+}
+Entity <|.. Animal
+Entity <|.. Adopter
+Entity <|.. Donor
+Entity <|.. Volunteer
+Entity <|.. RescueEvent
+Entity <|.. EventRegistration
+Entity <|.. User
+Entity <|.. Donation
+Donation <|.. BaseDonation
+BaseDonation <|-- OnlineDonation
+BaseDonation <|-- ChequeDonation
+BaseDonation <|-- InKindDonation
+Donation <|.. DonationDecorator
+DonationDecorator o--> Donation : wraps
+DonationDecorator <|-- RecurringDonation
+DonationDecorator <|-- InMemoryOfDonation
+Recipient <|.. Contact
+Recipient <|.. Donor
+BaseDonation --> Donor
+SentMessage --> Recipient
+ActivityFeed o-- SentMessage
+DataStore ..> Animal
+DataStore ..> Adopter
+DataStore ..> Donation
+DataStore ..> Donor
+DataStore ..> Volunteer
+DataStore ..> RescueEvent
+DataStore ..> EventRegistration
+DataStore ..> User
+DataStore ..> SentMessage
+
+package "com.rescue.repo" {
+  interface Repository<T extends Entity> {
+    + save(item : T)
+    + findById(id : int) : Optional<T>
+    + findAll() : List<T>
+    + delete(id : int)
+  }
+  class LookupTable<T extends Entity> {
+    # items : Map<Integer,T>
+    + nextId() : int
+  }
+  class AnimalRepository
+  class AdopterRepository
+  class VolunteerRepository
+  class RescueEventRepository
+  class EventRegistrationRepository
+  class UserRepository
+  class DonationRepository
+  class DonorRepository
+  class SentMessageRepository
+}
+Repository <|.. LookupTable
+LookupTable <|-- AnimalRepository
+LookupTable <|-- AdopterRepository
+LookupTable <|-- VolunteerRepository
+LookupTable <|-- RescueEventRepository
+LookupTable <|-- EventRegistrationRepository
+LookupTable <|-- UserRepository
+Repository <|.. DonationRepository
+Repository <|.. DonorRepository
+Repository <|.. SentMessageRepository
+AnimalRepository ..> DataStore
+AdopterRepository ..> DataStore
+VolunteerRepository ..> DataStore
+RescueEventRepository ..> DataStore
+EventRegistrationRepository ..> DataStore
+UserRepository ..> DataStore
+DonationRepository ..> DataStore
+DonorRepository ..> DataStore
+SentMessageRepository ..> DataStore
+
+package "com.rescue.factory" {
+  class DonationFactory {
+    {static} + createDonation(type : String, donor : Donor, amount : double, receiptText : String) : Donation
+  }
+}
+DonationFactory ..> Donation : creates
+DonationFactory ..> OnlineDonation
+DonationFactory ..> ChequeDonation
+DonationFactory ..> InKindDonation
+
+package "com.rescue.service" {
+  interface NotificationStrategy
+  interface Observer<E> {
+    + update(event : E)
+  }
+  class Subject<E> {
+    - observers : List<Observer<E>>
+    + attach(observer : Observer<E>)
+    + detach(observer : Observer<E>)
+    + publish(event : E)
+  }
+  class CommunicationModule {
+    - notifier : Notifier
+    - feed : ActivityFeed
+    - coordinator : Recipient
+    - currency : String
+    + connectDonations(donations : Subject<Donation>)
+    + connectAnimals(animals : Subject<AnimalStatusChanged>)
+    + connectEvents(events : Subject<EventUpdated>)
+    + createController() : CommunicationController
+  }
+}
+NotificationStrategy <|.. ChannelStrategy
+Subject o-- Observer : notifies
+CommunicationModule ..> Subject : exposes connect* hooks
+CommunicationModule o-- Notifier
+CommunicationModule o-- ActivityFeed
+CommunicationModule ..> CommunicationController
+
+package "com.rescue.service.strategy" {
+  interface VolunteerMatchingStrategy {
+    + getName() : String
+    + match(volunteers : List<Volunteer>, criterion : String) : List<Volunteer>
+  }
+  abstract class ChannelStrategy {
+    + getChannel() : ChannelType
+    + canReach(recipient : Recipient) : boolean
+    + addressOf(recipient : Recipient) : String
+    + format(recipient : Recipient, message : String) : String
+    + deliver(recipient : Recipient, message : String) : String
+  }
+  class EmailStrategy
+  class SmsStrategy
+  class SocialPostStrategy
+  class SkillMatchingStrategy
+  class AvailabilityMatchingStrategy
+  class Notifier {
+    - strategies : Map<ChannelType,ChannelStrategy>
+    - defaultChannels : Map<RecipientType,ChannelType>
+    - messageLog : Repository<SentMessage>
+    + register(strategy : ChannelStrategy) : Notifier
+    + send(recipient : Recipient, type : RecipientType, message : String) : SentMessage
+    + history() : List<SentMessage>
+  }
+  interface MessageGateway
+  class ConsoleGateway
+}
+ChannelStrategy <|-- EmailStrategy
+ChannelStrategy <|-- SmsStrategy
+ChannelStrategy <|-- SocialPostStrategy
+VolunteerMatchingStrategy <|.. SkillMatchingStrategy
+VolunteerMatchingStrategy <|.. AvailabilityMatchingStrategy
+Notifier o-- ChannelStrategy
+ChannelStrategy ..> MessageGateway
+MessageGateway <|.. ConsoleGateway
+Notifier ..> Repository
+
+package "com.rescue.service.observer" {
+  class AnimalStatusChanged <<record>>
+  class EventUpdated <<record>>
+  class AnimalStatusObserver
+  class CoordinatorObserver<E>
+  class DashboardObserver<E>
+  class EventUpdateObserver
+  class ThankYouMailerObserver
+}
+Observer <|.. AnimalStatusObserver
+Observer <|.. CoordinatorObserver
+Observer <|.. DashboardObserver
+Observer <|.. EventUpdateObserver
+Observer <|.. ThankYouMailerObserver
+AnimalStatusObserver ..> AnimalStatusChanged
+EventUpdateObserver ..> EventUpdated
+ThankYouMailerObserver ..> Donation
+DashboardObserver ..> ActivityFeed
+CoordinatorObserver ..> Notifier
+AnimalStatusObserver ..> Notifier
+EventUpdateObserver ..> Notifier
+ThankYouMailerObserver ..> Notifier
+
+package "com.rescue.controller (MVC)" {
+  class ControlPanelController
+  class AnimalController
+  class AdopterController
+  class DonationController
+  class VolunteerController
+  class EventController
+  class CommunicationController
+  class UserManagementController
+}
+package "com.rescue.view (MVC / Swing)" {
+  class ControlPanelView
+  class AnimalView
+  class AdopterView
+  class DonationView
+  class VolunteerView
+  class EventView
+  class CommunicationView
+  class UserManagementView
+  class RescueTheme <<UI helper>>
+}
+ControlPanelController --> ControlPanelView
+AnimalController --> AnimalView
+AdopterController --> AdopterView
+DonationController --> DonationView
+VolunteerController --> VolunteerView
+EventController --> EventView
+CommunicationController --> CommunicationView
+UserManagementController --> UserManagementView
+AnimalController ..> AnimalRepository
+AdopterController ..> AdopterRepository
+DonationController ..> DonationRepository
+DonationController ..> DonorRepository
+DonationController ..> DonationFactory
+VolunteerController ..> VolunteerRepository
+VolunteerController ..> EventRegistrationRepository
+VolunteerController ..> VolunteerMatchingStrategy
+EventController ..> RescueEventRepository
+EventController ..> VolunteerRepository
+EventController ..> EventRegistrationRepository
+UserManagementController ..> UserRepository
+CommunicationController ..> Notifier
+CommunicationController ..> ActivityFeed
+CommunicationController ..> Recipient
+ControlPanelController ..> AnimalController
+ControlPanelController ..> AdopterController
+ControlPanelController ..> DonationController
+ControlPanelController ..> VolunteerController
+ControlPanelController ..> EventController
+ControlPanelController ..> UserManagementController
+ControlPanelController ..> CommunicationModule
+
+package "com.rescue.demo" {
+  class CommunicationDemo
+}
+class Main
+Main ..> ControlPanelView
+Main ..> ControlPanelController
+CommunicationDemo ..> CommunicationModule
+
+note right of DataStore
+  Eager Singleton instance.
+  Holds shared in-memory maps.
+  No persistence across restarts.
+end note
+note right of AppConfig
+  Lazy Singleton accessor.
+  Stores organisation name and contact email.
+end note
+note right of CommunicationModule
+  The module has connect* methods,
+  but ControlPanelController's normal
+  startup path only creates the
+  Communication screen. The current
+  controllers do not visibly publish
+  domain events through these subjects.
+  Do not claim end-to-end Observer
+  integration without wiring/testing it.
+end note
+legend bottom
+  Phase 1 pattern set:
+  MVC | Strategy | Observer | Decorator | Factory | Singleton
+
+  Phase 2 (planned; not present as implemented classes in this main tree):
+  Command | Adapter | Facade | Template Method | Iterator | State | Proxy
+endlegend
+@enduml
