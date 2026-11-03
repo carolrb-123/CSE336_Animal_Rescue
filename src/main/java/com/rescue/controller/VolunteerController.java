@@ -1,7 +1,9 @@
 package com.rescue.controller;
 
 import com.rescue.model.Volunteer;
+import com.rescue.model.VolunteerOptions;
 import com.rescue.repo.EventRegistrationRepository;
+import com.rescue.repo.RescueEventRepository;
 import com.rescue.repo.VolunteerRepository;
 import com.rescue.service.strategy.AvailabilityMatchingStrategy;
 import com.rescue.service.strategy.SkillMatchingStrategy;
@@ -18,12 +20,15 @@ public class VolunteerController {
 
     private final VolunteerView view;
     private final VolunteerRepository repository;
+    private final RescueEventRepository eventRepository;
     private final EventRegistrationRepository registrationRepository;
 
     public VolunteerController(VolunteerView view, VolunteerRepository repository,
+                               RescueEventRepository eventRepository,
                                EventRegistrationRepository registrationRepository) {
         this.view = view;
         this.repository = repository;
+        this.eventRepository = eventRepository;
         this.registrationRepository = registrationRepository;
 
         view.getBackButton().addActionListener(e -> view.dispose());
@@ -38,6 +43,8 @@ public class VolunteerController {
         List<VolunteerMatchingStrategy> strategies = List.of(
                 new SkillMatchingStrategy(), new AvailabilityMatchingStrategy());
         view.setMatchingStrategies(strategies);
+        view.setMatchOptions(VolunteerOptions.SKILLS);
+        view.getStrategyBox().addActionListener(e -> updateMatchOptions());
         view.getMatchButton().addActionListener(e -> findVolunteers());
         refreshTable();
     }
@@ -79,29 +86,19 @@ public class VolunteerController {
         String name = view.getNameField().getText().trim();
         String email = view.getEmailField().getText().trim();
         String phone = view.getPhoneField().getText().trim();
-        List<String> skills = parseList(view.getSkillsField().getText());
-        String availability = view.getAvailabilityField().getText().trim();
-        String role = view.getRoleField().getText().trim();
-        String hoursText = view.getHoursField().getText().trim();
+        List<String> skills = view.getSkillsList().getSelectedValuesList();
+        List<String> availability = view.getAvailabilityList().getSelectedValuesList();
         List<String> certificates = parseList(view.getCertificatesField().getText());
 
         if (name.isEmpty() || email.isEmpty() || phone.isEmpty() || skills.isEmpty()
-                || availability.isEmpty() || role.isEmpty() || hoursText.isEmpty()) {
+                || availability.isEmpty()) {
             throw new IllegalArgumentException(
-                    "Please fill in the volunteer's name, contact, skills, availability, role, and hours.");
+                    "Please fill in the volunteer's name, contact, skills, and availability.");
         }
         if (!email.contains("@")) {
             throw new IllegalArgumentException("Please enter a valid email address.");
         }
-        try {
-            double hours = Double.parseDouble(hoursText);
-            if (!Double.isFinite(hours) || hours < 0) {
-                throw new IllegalArgumentException("Completed hours must be a non-negative number.");
-            }
-            return new Volunteer(id, name, email, phone, skills, availability, role, hours, certificates);
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException("Enter a numeric value for completed hours.");
-        }
+        return new Volunteer(id, name, email, phone, skills, availability, certificates);
     }
 
     private void deleteVolunteer() {
@@ -125,9 +122,9 @@ public class VolunteerController {
     private void findVolunteers() {
         VolunteerMatchingStrategy strategy =
                 (VolunteerMatchingStrategy) view.getStrategyBox().getSelectedItem();
-        String criterion = view.getMatchCriterionField().getText().trim();
-        if (strategy == null || criterion.isEmpty()) {
-            view.showMessage("Choose a matching strategy and enter a skill or availability.");
+        String criterion = (String) view.getMatchCriterionBox().getSelectedItem();
+        if (strategy == null || criterion == null) {
+            view.showMessage("Choose a matching strategy and match option.");
             return;
         }
         view.getMatchTableModel().setRowCount(0);
@@ -136,9 +133,8 @@ public class VolunteerController {
                         volunteer.getId(),
                         volunteer.getName(),
                         String.join(", ", volunteer.getSkills()),
-                        volunteer.getAvailability(),
-                        volunteer.getRole(),
-                        volunteer.getHours()
+                        String.join(", ", volunteer.getAvailability()),
+                        completedHours(volunteer.getId())
                 }));
     }
 
@@ -150,10 +146,20 @@ public class VolunteerController {
             view.getNameField().setText(volunteer.getName());
             view.getEmailField().setText(volunteer.getEmail());
             view.getPhoneField().setText(volunteer.getPhone());
-            view.getSkillsField().setText(String.join(", ", volunteer.getSkills()));
-            view.getAvailabilityField().setText(volunteer.getAvailability());
-            view.getRoleField().setText(volunteer.getRole());
-            view.getHoursField().setText(String.valueOf(volunteer.getHours()));
+            view.getSkillsList().clearSelection();
+            volunteer.getSkills().forEach(skill -> {
+                int index = VolunteerOptions.SKILLS.indexOf(skill);
+                if (index >= 0) {
+                    view.getSkillsList().addSelectionInterval(index, index);
+                }
+            });
+            view.getAvailabilityList().clearSelection();
+            volunteer.getAvailability().forEach(availability -> {
+                int index = VolunteerOptions.AVAILABILITIES.indexOf(availability);
+                if (index >= 0) {
+                    view.getAvailabilityList().addSelectionInterval(index, index);
+                }
+            });
             view.getCertificatesField().setText(String.join(", ", volunteer.getCertificates()));
         });
     }
@@ -167,11 +173,20 @@ public class VolunteerController {
                         volunteer.getEmail(),
                         volunteer.getPhone(),
                         String.join(", ", volunteer.getSkills()),
-                        volunteer.getAvailability(),
-                        volunteer.getRole(),
-                        volunteer.getHours(),
+                        String.join(", ", volunteer.getAvailability()),
+                        completedHours(volunteer.getId()),
                         String.join(", ", volunteer.getCertificates())
                 }));
+    }
+
+    private double completedHours(int volunteerId) {
+        return registrationRepository.findAll().stream()
+                .filter(registration -> registration.getVolunteerId() == volunteerId)
+                .filter(registration -> "Completed".equals(registration.getStatus()))
+                .mapToDouble(registration -> eventRepository.findById(registration.getEventId())
+                        .map(event -> event.getHours())
+                        .orElse(0.0))
+                .sum();
     }
 
     private static Optional<Integer> selectedId(JTable table) {
@@ -191,5 +206,13 @@ public class VolunteerController {
                 .filter(value -> !value.isEmpty())
                 .distinct()
                 .collect(Collectors.toList());
+    }
+
+    private void updateMatchOptions() {
+        VolunteerMatchingStrategy strategy =
+                (VolunteerMatchingStrategy) view.getStrategyBox().getSelectedItem();
+        view.setMatchOptions(strategy instanceof SkillMatchingStrategy
+                ? VolunteerOptions.SKILLS
+                : VolunteerOptions.AVAILABILITIES);
     }
 }

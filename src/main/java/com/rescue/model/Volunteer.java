@@ -9,21 +9,17 @@ public class Volunteer implements Entity {
     private final String email;
     private final String phone;
     private final List<String> skills;
-    private final String availability;
-    private final String role;
-    private final double hours;
+    private final List<String> availability;
     private final List<String> certificates;
 
     public Volunteer(int id, String name, String email, String phone, List<String> skills,
-                     String availability, String role, double hours, List<String> certificates) {
+                     List<String> availability, List<String> certificates) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.phone = phone;
         this.skills = List.copyOf(skills);
-        this.availability = availability;
-        this.role = role;
-        this.hours = hours;
+        this.availability = List.copyOf(availability);
         this.certificates = List.copyOf(certificates);
     }
 
@@ -52,16 +48,8 @@ public class Volunteer implements Entity {
         return skills;
     }
 
-    public String getAvailability() {
+    public List<String> getAvailability() {
         return availability;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public double getHours() {
-        return hours;
     }
 
     public List<String> getCertificates() {

@@ -2,10 +2,12 @@ package com.rescue.view;
 
 import com.rescue.model.RescueEvent;
 import com.rescue.model.Volunteer;
+import com.rescue.model.VolunteerOptions;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.DefaultListSelectionModel;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -14,6 +16,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
@@ -33,17 +36,20 @@ public class EventView extends JFrame {
     private static final long serialVersionUID = 1L;
     private final JButton backButton = new JButton("Back to Menu");
     private final JTextField nameField = new JTextField(20);
-    private final JTextField typeField = new JTextField(20);
+    private final JComboBox<String> typeBox =
+            new JComboBox<>(new String[]{"Adoption", "Fundraising", "Vaccine"});
     private final JTextField dateField = new JTextField(20);
     private final JTextField locationField = new JTextField(20);
-    private final JTextField skillsField = new JTextField(20);
+    private final JList<String> skillsList = new JList<>(
+            VolunteerOptions.SKILLS.toArray(String[]::new));
     private final JTextField descriptionField = new JTextField(20);
+    private final JTextField hoursField = new JTextField(20);
     private final JButton addButton = new RoundedButton("Add");
     private final JButton updateButton = new RoundedButton("Update");
     private final JButton deleteButton = new RoundedButton("Delete");
     private final JButton clearButton = new RoundedButton("Clear");
     private final DefaultTableModel tableModel = new DefaultTableModel(
-            new String[]{"ID", "Event", "Type", "Date", "Location", "Required Skills", "Description"}, 0) {
+            new String[]{"ID", "Event", "Type", "Date", "Location", "Required Skills", "Description", "Hours"}, 0) {
         private static final long serialVersionUID = 1L;
 
         @Override
@@ -76,7 +82,7 @@ public class EventView extends JFrame {
     public EventView() {
         setTitle("Animal Rescue | Events");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setMinimumSize(new Dimension(950, 760));
+        setMinimumSize(new Dimension(850, 650));
 
         JPanel mainPanel = new JPanel(new BorderLayout(0, 20));
         mainPanel.setBackground(LIGHT_GREEN);
@@ -89,13 +95,13 @@ public class EventView extends JFrame {
         header.add(backButton, BorderLayout.EAST);
 
         JTabbedPane tabs = new JTabbedPane();
-        tabs.addTab("Events", buildEventPanel());
-        tabs.addTab("Volunteer Registrations", buildRegistrationPanel());
+        tabs.addTab("Events", scrollable(buildEventPanel()));
+        tabs.addTab("Volunteer Registrations", scrollable(buildRegistrationPanel()));
 
         mainPanel.add(header, BorderLayout.NORTH);
         mainPanel.add(tabs, BorderLayout.CENTER);
         setContentPane(mainPanel);
-        setSize(1100, 850);
+        setSize(1000, 720);
         setLocationRelativeTo(null);
     }
 
@@ -107,18 +113,22 @@ public class EventView extends JFrame {
         JPanel formCard = new JPanel(new GridBagLayout());
         formCard.setBackground(WHITE);
         formCard.setBorder(new EmptyBorder(22, 22, 22, 22));
-        for (JTextField field : new JTextField[]{nameField, typeField, dateField,
-                locationField, skillsField, descriptionField}) {
+        for (JTextField field : new JTextField[]{nameField, dateField,
+                locationField, descriptionField, hoursField}) {
             styleField(field);
         }
+        styleCombo(typeBox);
+        styleMultiSelectList(skillsList);
 
         int row = 0;
         addField(formCard, "Event Name", nameField, row++);
-        addField(formCard, "Event Type", typeField, row++);
+        addField(formCard, "Event Type", typeBox, row++);
         addField(formCard, "Date (YYYY-MM-DD)", dateField, row++);
         addField(formCard, "Location", locationField, row++);
-        addField(formCard, "Required Skills (comma-separated)", skillsField, row++);
+        addField(formCard, "Required Skills (select one or more)",
+                new JScrollPane(skillsList), row++);
         addField(formCard, "Description", descriptionField, row++);
+        addField(formCard, "Event Hours", hoursField, row++);
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         buttons.setBackground(WHITE);
@@ -202,13 +212,46 @@ public class EventView extends JFrame {
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createLineBorder(SECTION_BORDER));
+        scrollPane.setPreferredSize(new Dimension(0, 260));
         tablePanel.add(scrollPane, BorderLayout.CENTER);
         return tablePanel;
     }
 
+    private static JScrollPane scrollable(JPanel panel) {
+        JScrollPane scrollPane = new JScrollPane(panel,
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        return scrollPane;
+    }
+
     private static void styleButton(JButton button) {
         button.setFont(BUTTON);
-        button.setPreferredSize(new Dimension(110, 42));
+        button.setPreferredSize(new Dimension(150, 42));
+    }
+
+    private static void styleMultiSelectList(JList<String> list) {
+        list.setVisibleRowCount(6);
+        list.setSelectionModel(new ToggleSelectionModel());
+        list.setFont(FIELD);
+        list.setForeground(TEXT);
+        list.setBackground(WHITE);
+        list.setBorder(BorderFactory.createLineBorder(FIELD_BORDER));
+    }
+
+    private static final class ToggleSelectionModel extends DefaultListSelectionModel {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void setSelectionInterval(int index0, int index1) {
+            if (index0 == index1 && isSelectedIndex(index0)) {
+                removeSelectionInterval(index0, index1);
+            } else {
+                addSelectionInterval(index0, index1);
+            }
+        }
     }
 
     private void styleField(JTextField field) {
@@ -233,11 +276,12 @@ public class EventView extends JFrame {
 
     public void clearEventFields() {
         nameField.setText("");
-        typeField.setText("");
+        typeBox.setSelectedIndex(0);
         dateField.setText("");
         locationField.setText("");
-        skillsField.setText("");
+        skillsList.clearSelection();
         descriptionField.setText("");
+        hoursField.setText("");
         eventTable.clearSelection();
     }
 
@@ -251,11 +295,12 @@ public class EventView extends JFrame {
 
     public JButton getBackButton() { return backButton; }
     public JTextField getNameField() { return nameField; }
-    public JTextField getTypeField() { return typeField; }
+    public JComboBox<String> getTypeBox() { return typeBox; }
     public JTextField getDateField() { return dateField; }
     public JTextField getLocationField() { return locationField; }
-    public JTextField getSkillsField() { return skillsField; }
+    public JList<String> getSkillsList() { return skillsList; }
     public JTextField getDescriptionField() { return descriptionField; }
+    public JTextField getHoursField() { return hoursField; }
     public JButton getAddButton() { return addButton; }
     public JButton getUpdateButton() { return updateButton; }
     public JButton getDeleteButton() { return deleteButton; }

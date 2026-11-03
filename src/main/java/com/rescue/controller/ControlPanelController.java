@@ -45,7 +45,8 @@ public class ControlPanelController {
 
     private void openVolunteerModule() {
         VolunteerView volunteerView = new VolunteerView();
-        new VolunteerController(volunteerView, new VolunteerRepository(), new EventRegistrationRepository());
+        new VolunteerController(volunteerView, new VolunteerRepository(),
+                new RescueEventRepository(), new EventRegistrationRepository());
         volunteerView.setVisible(true);
     }
 

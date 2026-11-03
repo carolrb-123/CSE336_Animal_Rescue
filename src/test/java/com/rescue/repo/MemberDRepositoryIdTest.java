@@ -46,11 +46,11 @@ class MemberDRepositoryIdTest {
 
     private static Volunteer volunteer() {
         return new Volunteer(0, "Test Volunteer", "test@example.com", "01000000000",
-                List.of("First Aid"), "Weekends", "Helper", 0, List.of());
+                List.of("First Aid"), List.of("Morning (AM) — 8:00 AM - 12:00 PM"), List.of());
     }
 
     private static RescueEvent event() {
         return new RescueEvent(0, "Test Event", "Adoption Day", LocalDate.now(),
-                "Shelter", List.of("First Aid"), "Repository ID test");
+                "Shelter", List.of("First Aid"), "Repository ID test", 4);
     }
 }
