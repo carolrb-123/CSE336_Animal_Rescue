@@ -1,22 +1,53 @@
 package com.rescue.controller;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.List;
+
+import javax.swing.SwingUtilities;
 
 import com.rescue.model.Adopter;
 import com.rescue.repo.AdopterRepository;
+import com.rescue.repo.RepositoryEvent;
+import com.rescue.service.EmailNotificationStrategy;
+import com.rescue.service.NotificationStrategy;
+import com.rescue.service.Observer;
 import com.rescue.view.AdopterView;
 
 public class AdopterController {
 
     private final AdopterView view;
     private final AdopterRepository repository;
+        private final NotificationStrategy notificationStrategy;
+        private final Observer<RepositoryEvent<Adopter>> repositoryObserver = event -> {
+                if (SwingUtilities.isEventDispatchThread()) {
+                        refreshTable();
+                } else {
+                        SwingUtilities.invokeLater(this::refreshTable);
+                }
+        };
 
     public AdopterController(
             AdopterView view,
             AdopterRepository repository) {
+                this(view, repository, new EmailNotificationStrategy());
+        }
+
+        public AdopterController(
+                        AdopterView view,
+                        AdopterRepository repository,
+                        NotificationStrategy notificationStrategy) {
 
         this.view = view;
         this.repository = repository;
+                this.notificationStrategy = notificationStrategy;
+                repository.addObserver(repositoryObserver);
+                view.addWindowListener(new WindowAdapter() {
+                        @Override
+                        public void windowClosed(WindowEvent event) {
+                                repository.removeObserver(repositoryObserver);
+                        }
+                });
 
         this.view.getBackBtn().addActionListener(e -> this.view.dispose());
         view.getAddButton().addActionListener(
@@ -71,7 +102,7 @@ public class AdopterController {
         );
 
         repository.save(adopter);
-        refreshTable();
+        notificationStrategy.send(adopter, "Your adopter profile was added successfully.");
         clearFields();
         view.showMessage("Adopter added successfully!");
     }
@@ -140,7 +171,7 @@ public class AdopterController {
 
             repository.save(updatedAdopter);
 
-            refreshTable();
+            notificationStrategy.send(updatedAdopter, "Your adopter profile was updated successfully.");
             clearFields();
 
             view.showMessage(
@@ -174,7 +205,6 @@ public class AdopterController {
 
             repository.delete(id);
 
-            refreshTable();
             clearFields();
 
             view.showMessage(

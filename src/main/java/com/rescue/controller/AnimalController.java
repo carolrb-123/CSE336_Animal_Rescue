@@ -1,9 +1,15 @@
 package com.rescue.controller;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.List;
+
+import javax.swing.SwingUtilities;
 
 import com.rescue.model.Animal;
 import com.rescue.repo.AnimalRepository;
+import com.rescue.repo.RepositoryEvent;
+import com.rescue.service.Observer;
 import com.rescue.view.AnimalView;
 import com.rescue.service.CommunicationModule;
 import com.rescue.service.observer.AnimalStatusChanged;
@@ -12,6 +18,13 @@ public class AnimalController {
 
     private final AnimalView view;
     private final AnimalRepository repository;
+        private final Observer<RepositoryEvent<Animal>> repositoryObserver = event -> {
+                if (SwingUtilities.isEventDispatchThread()) {
+                        refreshTable();
+                } else {
+                        SwingUtilities.invokeLater(this::refreshTable);
+                }
+        };
 
     public AnimalController(
             AnimalView view,
@@ -20,6 +33,13 @@ public class AnimalController {
         this.view = view;
         this.repository = repository;
         this.view.getBackBtn().addActionListener(e -> this.view.dispose());
+                repository.addObserver(repositoryObserver);
+                view.addWindowListener(new WindowAdapter() {
+                        @Override
+                        public void windowClosed(WindowEvent event) {
+                                repository.removeObserver(repositoryObserver);
+                        }
+                });
         view.getAddButton().addActionListener(
                 e -> addAnimal()
         );
@@ -77,7 +97,6 @@ public class AnimalController {
         );
 
         repository.save(animal);
-
         // Tell the Communication part: a new animal that is ready gets a public post.
         if (animal.isAvailableForAdoption()) {
             CommunicationModule.getInstance().getAnimalSubject().publish(
@@ -188,7 +207,6 @@ public class AnimalController {
 
             repository.delete(id);
 
-            refreshTable();
             clearFields();
 
             view.showMessage(

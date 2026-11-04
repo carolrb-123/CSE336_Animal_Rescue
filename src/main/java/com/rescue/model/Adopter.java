@@ -1,11 +1,11 @@
 package com.rescue.model;
 
-public class Adopter implements Entity {
+public class Adopter implements Entity, Recipient {
 
-    private int id;
-    private String name;
-    private String email;
-    private String phone;
+    private final int id;
+    private final String name;
+    private final String email;
+    private final String phone;
 
     public Adopter(int id, String name, String email, String phone) {
         this.id = id;
@@ -19,14 +19,17 @@ public class Adopter implements Entity {
         return id;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public String getEmail() {
         return email;
     }
 
+    @Override
     public String getPhone() {
         return phone;
     }
