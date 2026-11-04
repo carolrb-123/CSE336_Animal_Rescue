@@ -2,40 +2,44 @@ package com.rescue.repo;
 
 import com.rescue.model.DataStore;
 import com.rescue.model.SentMessage;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-
+// Stores every message we sent (or tried to send) in the shared DataStore.
 public class SentMessageRepository implements Repository<SentMessage> {
 
-
     private final Map<Integer, SentMessage> messages = DataStore.getInstance().getSentMessages();
-    private int nextId = 1;
 
     @Override
-    public synchronized void save(SentMessage message) {
+    public void save(SentMessage message) {
         if (message.getId() <= 0) {
-            message.setId(nextId++);
-        } else {
-            nextId = Math.max(nextId, message.getId() + 1);
+            // Give it the next free number, so an old message is never overwritten.
+            int biggestId = 0;
+            for (int id : messages.keySet()) {
+                if (id > biggestId) {
+                    biggestId = id;
+                }
+            }
+            message.setId(biggestId + 1);
         }
         messages.put(message.getId(), message);
     }
 
     @Override
-    public synchronized Optional<SentMessage> findById(int id) {
+    public Optional<SentMessage> findById(int id) {
         return Optional.ofNullable(messages.get(id));
     }
 
     @Override
-    public synchronized List<SentMessage> findAll() {
+    public List<SentMessage> findAll() {
         return new ArrayList<>(messages.values());
     }
 
     @Override
-    public synchronized void delete(int id) {
+    public void delete(int id) {
         messages.remove(id);
     }
 }

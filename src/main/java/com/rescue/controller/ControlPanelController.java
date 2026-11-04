@@ -67,7 +67,7 @@ public class ControlPanelController {
     }
 
     private void openCommunicationModule() {
-        CommunicationModule module = new CommunicationModule();
+        CommunicationModule module = CommunicationModule.getInstance();
         CommunicationController commsController = module.createController();
         commsController.getView().setVisible(true);
     }

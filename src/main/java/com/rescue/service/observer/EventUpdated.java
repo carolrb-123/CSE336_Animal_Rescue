@@ -2,32 +2,46 @@ package com.rescue.service.observer;
 
 import com.rescue.model.Recipient;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-/**
- * Published by the Events module (D) on a Subject&lt;EventUpdated&gt; when an adoption day,
- * fundraiser or vaccination drive is moved, cancelled or needs a reminder.
- *
- * @param change       what changed, e.g. "Moved to Sat 7 Nov, 10:00"
- * @param participants registered volunteers (any class that implements Recipient)
- */
-public record EventUpdated(int eventId, String title, String change, List<? extends Recipient> participants,
-                           LocalDateTime occurredAt) {
+// The news the Events module publishes when an event changes.
+// Example: "Adoption Day" -> "Moved to Sat 7 Nov, 10:00".
+public class EventUpdated {
 
-    public EventUpdated {
-        Objects.requireNonNull(title, "title");
-        Objects.requireNonNull(change, "change");
-        participants = participants == null ? List.of() : List.copyOf(participants);
-        occurredAt = occurredAt == null ? LocalDateTime.now() : occurredAt;
+    private final int eventId;
+    private final String title;
+    private final String change;
+    private final List<Recipient> participants;   // people registered for the event
+
+    public EventUpdated(int eventId, String title, String change, List<Recipient> participants) {
+        this.eventId = eventId;
+        this.title = title;
+        this.change = change;
+        if (participants == null) {
+            this.participants = new ArrayList<>();
+        } else {
+            this.participants = participants;
+        }
     }
 
-    public EventUpdated(int eventId, String title, String change, List<? extends Recipient> participants) {
-        this(eventId, title, change, participants, LocalDateTime.now());
+    public int getEventId() {
+        return eventId;
     }
 
-    public String summary() {
+    public String getTitle() {
+        return title;
+    }
+
+    public String getChange() {
+        return change;
+    }
+
+    public List<Recipient> getParticipants() {
+        return participants;
+    }
+
+    public String getSummary() {
         return "Event \"" + title + "\": " + change;
     }
 }

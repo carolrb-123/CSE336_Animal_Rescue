@@ -2,42 +2,53 @@ package com.rescue.service.observer;
 
 import com.rescue.model.Recipient;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-/**
- * Published by the Animals module (E) on a Subject&lt;AnimalStatusChanged&gt; when an animal's status changes.
- * Statuses are text (pass yourEnum.name()), so this does not depend on E's status type,
- * which becomes the State pattern in Phase 2.
- *
- * @param interested adopters, fosters or sponsors to tell (any class that implements Recipient). May be empty.
- */
-public record AnimalStatusChanged(int animalId, String animalName, String oldStatus, String newStatus,
-                                  List<? extends Recipient> interested, LocalDateTime occurredAt) {
+// The news the Animals module publishes when an animal's status changes.
+// Example: "Bondok" went from "IN_TREATMENT" to "AVAILABLE".
+public class AnimalStatusChanged {
 
-    public AnimalStatusChanged {
-        Objects.requireNonNull(animalName, "animalName");
-        Objects.requireNonNull(newStatus, "newStatus");
-        oldStatus = oldStatus == null ? "NONE" : oldStatus;
-        interested = interested == null ? List.of() : List.copyOf(interested);
-        occurredAt = occurredAt == null ? LocalDateTime.now() : occurredAt;
-    }
+    private final int animalId;
+    private final String animalName;
+    private final String oldStatus;
+    private final String newStatus;
+    private final List<Recipient> interested;   // people following this animal (can be empty)
 
     public AnimalStatusChanged(int animalId, String animalName, String oldStatus, String newStatus,
-                               List<? extends Recipient> interested) {
-        this(animalId, animalName, oldStatus, newStatus, interested, LocalDateTime.now());
+                               List<Recipient> interested) {
+        this.animalId = animalId;
+        this.animalName = animalName;
+        this.oldStatus = oldStatus;
+        this.newStatus = newStatus;
+        if (interested == null) {
+            this.interested = new ArrayList<>();
+        } else {
+            this.interested = interested;
+        }
     }
 
-    public boolean isNow(String status) {
-        return newStatus.equalsIgnoreCase(status);
+    public int getAnimalId() {
+        return animalId;
     }
 
-    public String summary() {
-        return animalName + " is now " + readable(newStatus) + " (was " + readable(oldStatus) + ")";
+    public String getAnimalName() {
+        return animalName;
     }
 
-    public static String readable(String status) {
-        return status.toLowerCase().replace('_', ' ');
+    public String getOldStatus() {
+        return oldStatus;
+    }
+
+    public String getNewStatus() {
+        return newStatus;
+    }
+
+    public List<Recipient> getInterested() {
+        return interested;
+    }
+
+    public String getSummary() {
+        return animalName + " is now " + newStatus + " (was " + oldStatus + ")";
     }
 }

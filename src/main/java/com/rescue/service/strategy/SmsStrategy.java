@@ -3,16 +3,13 @@ package com.rescue.service.strategy;
 import com.rescue.model.ChannelType;
 import com.rescue.model.Recipient;
 
-import java.util.regex.Pattern;
-
-/** STRATEGY pattern: ConcreteStrategy for SMS. One line, cut to 160 characters. */
+// STRATEGY pattern - concrete strategy: send by SMS (one line, max 160 characters).
 public class SmsStrategy extends ChannelStrategy {
 
     public static final int MAX_LENGTH = 160;
-    private static final Pattern PHONE = Pattern.compile("^\\+?\\d{7,15}$");
 
-    public SmsStrategy(MessageGateway gateway, String organisationName) {
-        super(gateway, organisationName);
+    public SmsStrategy(String organisationName) {
+        super(organisationName);
     }
 
     @Override
@@ -22,26 +19,42 @@ public class SmsStrategy extends ChannelStrategy {
 
     @Override
     public boolean canReach(Recipient recipient) {
-        return recipient.getPhone() != null && PHONE.matcher(normalise(recipient.getPhone())).matches();
+        String phone = recipient.getPhone();
+        if (phone == null) {
+            return false;
+        }
+        phone = cleanPhone(phone);
+        if (phone.startsWith("+")) {
+            phone = phone.substring(1);
+        }
+        if (phone.length() < 7 || phone.length() > 15) {
+            return false;
+        }
+        // Every character must be a digit.
+        for (int i = 0; i < phone.length(); i++) {
+            if (!Character.isDigit(phone.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
-    public String addressOf(Recipient recipient) {
-        return normalise(recipient.getPhone());
+    public String getAddress(Recipient recipient) {
+        return cleanPhone(recipient.getPhone());
     }
 
     @Override
     public String format(Recipient recipient, String message) {
-        String text = (organisationName + ": " + message).replaceAll("\\s+", " ").trim();
-        return text.length() <= MAX_LENGTH ? text : text.substring(0, MAX_LENGTH - 3) + "...";
+        String text = organisationName + ": " + message.replace("\n", " ");
+        if (text.length() > MAX_LENGTH) {
+            text = text.substring(0, MAX_LENGTH - 3) + "...";
+        }
+        return text;
     }
 
-    @Override
-    public String whyUnreachable(Recipient recipient) {
-        return recipient.getName() + " has no valid phone number.";
-    }
-
-    private static String normalise(String phone) {
-        return phone.replaceAll("[\\s\\-()]", "");
+    // Remove spaces and dashes, so "+20 100-123-4567" becomes "+201001234567".
+    private String cleanPhone(String phone) {
+        return phone.replace(" ", "").replace("-", "");
     }
 }

@@ -9,13 +9,8 @@ import com.rescue.model.SentMessage;
 import com.rescue.service.strategy.Notifier;
 import com.rescue.view.CommunicationView;
 
-import javax.swing.SwingUtilities;
-
-/**
- * MVC: Controller for the Communication screen.
- * The view only reports clicks here; this class builds the recipient, asks the Notifier
- * to send, and pushes the results back into the view.
- */
+// MVC - the Controller of the Communication screen.
+// It reads the form, asks the Notifier to send, and updates the screen.
 public class CommunicationController {
 
     private final CommunicationView view;
@@ -27,16 +22,12 @@ public class CommunicationController {
         this.notifier = notifier;
         this.feed = feed;
 
-        this.view.getBackBtn().addActionListener(e -> this.view.dispose());
-        view.setRecipientTypes(RecipientType.values());
-        view.setChannels(notifier.availableChannels());
         view.addSendListener(e -> sendMessage());
-        view.addRecipientTypeListener(e -> onRecipientTypeChanged());
+        view.addRefreshListener(e -> refresh());
+        view.addRecipientTypeListener(e -> recipientTypeChanged());
+        view.getBackBtn().addActionListener(e -> view.dispose());
 
-        // Observers also send messages (thank-yous, alerts), so refresh whenever the feed changes.
-        feed.addChangeListener(() -> SwingUtilities.invokeLater(this::refresh));
-
-        onRecipientTypeChanged();
+        recipientTypeChanged();
         refresh();
     }
 
@@ -50,37 +41,46 @@ public class CommunicationController {
             view.showMessage("Please write a message.");
             return;
         }
-        try {
-            RecipientType type = view.getRecipientType();
-            Recipient recipient = (type == RecipientType.PUBLIC)
-                    ? Contact.PUBLIC_AUDIENCE
-                    : new Contact(view.getRecipientName(), view.getEmail(), view.getPhone());
-            ChannelType chosen = view.getSelectedChannel();   // null means Auto
 
-            SentMessage result = (chosen == null)
-                    ? notifier.send(recipient, type, text)
-                    : notifier.send(recipient, type, text, chosen);
-
-            refresh();
-            if (result.isSent()) {
-                view.showMessage("Sent by " + result.getChannel().label() + " to " + result.getAddress() + ".");
-                view.clearMessage();
-            } else {
-                view.showMessage("Not sent: " + result.getFailureReason());
+        RecipientType type = view.getRecipientType();
+        Recipient recipient;
+        if (type == RecipientType.PUBLIC) {
+            recipient = Contact.PUBLIC_AUDIENCE;
+        } else {
+            if (view.getRecipientName().isEmpty()) {
+                view.showMessage("Please enter the recipient's name.");
+                return;
             }
-        } catch (IllegalArgumentException ex) {
-            view.showMessage(ex.getMessage());
+            recipient = new Contact(view.getRecipientName(), view.getEmail(), view.getPhone());
+        }
+
+        SentMessage result;
+        String channel = view.getSelectedChannel();
+        if (channel.equals("AUTO")) {
+            result = notifier.send(recipient, type, text);
+        } else {
+            result = notifier.send(recipient, type, text, ChannelType.valueOf(channel));
+        }
+
+        refresh();
+        if (result.isSent()) {
+            view.showMessage("Sent by " + result.getChannel() + " to " + result.getAddress() + ".");
+            view.clearMessage();
+        } else {
+            view.showMessage("Not sent: " + result.getFailureReason());
         }
     }
 
-    private void onRecipientTypeChanged() {
+    // When the recipient type changes, show which channel "AUTO" will use.
+    private void recipientTypeChanged() {
         RecipientType type = view.getRecipientType();
-        view.setAutoChannelHint(notifier.getDefaultChannel(type));
+        view.setAutoHint("AUTO sends to a " + type + " by " + notifier.getDefaultChannel(type));
+        // A public post has no name, email or phone.
         view.setContactFieldsEnabled(type != RecipientType.PUBLIC);
     }
 
     private void refresh() {
-        view.showHistory(notifier.history());
-        view.showFeed(feed.entries());
+        view.showHistory(notifier.getHistory());
+        view.showFeed(feed.getEntries());
     }
 }

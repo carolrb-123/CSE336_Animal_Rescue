@@ -2,38 +2,21 @@ package com.rescue.model;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-/** The dashboard's "what just happened" list, newest first. Filled by DashboardObserver. */
+// The dashboard's list of what just happened (newest first).
+// The observers add lines here, and the Communication screen shows them.
 public class ActivityFeed {
 
-    private static final int MAX_ENTRIES = 200;
-    private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("dd MMM HH:mm");
+    private final List<String> entries = new ArrayList<>();
 
-    private final Deque<String> entries = new ArrayDeque<>();
-    private final List<Runnable> changeListeners = new CopyOnWriteArrayList<>();
-
-    public void add(LocalDateTime at, String text) {
-        synchronized (entries) {
-            entries.addFirst(TIME.format(at) + "   " + text);
-            if (entries.size() > MAX_ENTRIES) {
-                entries.removeLast();
-            }
-        }
-        changeListeners.forEach(Runnable::run);
+    public void add(String text) {
+        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd MMM HH:mm"));
+        entries.add(0, time + "   " + text);   // index 0 = put it at the top
     }
 
-    public List<String> entries() {
-        synchronized (entries) {
-            return List.copyOf(entries);
-        }
-    }
-
-    /** Lets a controller refresh its view when the feed changes. */
-    public void addChangeListener(Runnable listener) {
-        changeListeners.add(listener);
+    public List<String> getEntries() {
+        return entries;
     }
 }

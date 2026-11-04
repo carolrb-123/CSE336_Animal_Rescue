@@ -3,15 +3,11 @@ package com.rescue.service.strategy;
 import com.rescue.model.ChannelType;
 import com.rescue.model.Recipient;
 
-import java.util.regex.Pattern;
-
-/** STRATEGY pattern: ConcreteStrategy for email. Greeting, message and signature. */
+// STRATEGY pattern - concrete strategy: send by email.
 public class EmailStrategy extends ChannelStrategy {
 
-    private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
-
-    public EmailStrategy(MessageGateway gateway, String organisationName) {
-        super(gateway, organisationName);
+    public EmailStrategy(String organisationName) {
+        super(organisationName);
     }
 
     @Override
@@ -21,23 +17,19 @@ public class EmailStrategy extends ChannelStrategy {
 
     @Override
     public boolean canReach(Recipient recipient) {
-        return recipient.getEmail() != null && EMAIL.matcher(recipient.getEmail().trim()).matches();
+        String email = recipient.getEmail();
+        return email != null && email.contains("@") && email.contains(".");
     }
 
     @Override
-    public String addressOf(Recipient recipient) {
-        return recipient.getEmail().trim();
+    public String getAddress(Recipient recipient) {
+        return recipient.getEmail();
     }
 
     @Override
     public String format(Recipient recipient, String message) {
         return "Dear " + recipient.getName() + ",\n\n"
-                + message.trim() + "\n\n"
+                + message + "\n\n"
                 + "With thanks,\n" + organisationName;
-    }
-
-    @Override
-    public String whyUnreachable(Recipient recipient) {
-        return recipient.getName() + " has no valid email address.";
     }
 }

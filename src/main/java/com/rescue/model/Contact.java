@@ -1,13 +1,10 @@
 package com.rescue.model;
 
-/**
- * A simple Recipient for people who are not stored elsewhere: someone typed into the
- * Communication screen, the coordinator, or the public social page.
- * Donors, volunteers and adopters can be passed to the Notifier directly, since they implement Recipient.
- */
+// A simple person we can send a message to (typed in the Communication screen,
+// the coordinator, or the public social page).
 public class Contact implements Recipient {
 
-    /** The rescue's public social page. The only recipient a social post may go to. */
+    // The rescue's public social page. A social post can only go to this contact.
     public static final Contact PUBLIC_AUDIENCE = new Contact("Public followers", null, null);
 
     private final String name;
@@ -15,12 +12,20 @@ public class Contact implements Recipient {
     private final String phone;
 
     public Contact(String name, String email, String phone) {
-        if (name == null || name.isBlank()) {
+        if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Please enter the recipient's name.");
         }
         this.name = name.trim();
-        this.email = blankToNull(email);
-        this.phone = blankToNull(phone);
+        this.email = emptyToNull(email);
+        this.phone = emptyToNull(phone);
+    }
+
+    // An empty text box means "no email" / "no phone", so we store null.
+    private String emptyToNull(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return null;
+        }
+        return text.trim();
     }
 
     @Override
@@ -36,9 +41,5 @@ public class Contact implements Recipient {
     @Override
     public String getPhone() {
         return phone;
-    }
-
-    private static String blankToNull(String value) {
-        return (value == null || value.isBlank()) ? null : value.trim();
     }
 }

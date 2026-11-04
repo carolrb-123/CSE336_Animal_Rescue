@@ -9,6 +9,7 @@ import com.rescue.model.RecurringDonation;
 import com.rescue.repo.DonationRepository;
 import com.rescue.repo.DonorRepository;
 import com.rescue.view.DonationView;
+import com.rescue.service.CommunicationModule;
 
 public class DonationController {
 
@@ -81,6 +82,9 @@ public class DonationController {
                 donation = new InMemoryOfDonation(donation, view.getMemoryName());
             }
             donationRepository.save(donation);
+
+            // Tell the Communication part: thank the donor, alert the coordinator, update the dashboard.
+            CommunicationModule.getInstance().getDonationSubject().publish(donation);
 
             view.displayDonation(
                     "Donor: " + donation.getDonor().getName()

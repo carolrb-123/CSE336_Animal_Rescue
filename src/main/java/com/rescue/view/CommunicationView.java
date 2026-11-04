@@ -1,6 +1,5 @@
 package com.rescue.view;
 
-import com.rescue.model.ChannelType;
 import com.rescue.model.RecipientType;
 import com.rescue.model.SentMessage;
 
@@ -21,45 +20,34 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
+import java.awt.GridLayout;
 import java.awt.event.ActionListener;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
 import java.util.List;
 
 import static com.rescue.view.RescueTheme.*;
 
-/**
- * MVC: View for the Communication screen, styled like DonationView.
- * It only shows data and reports clicks; all decisions are in CommunicationController.
- */
+// MVC - the View of the Communication screen.
+// It only shows things and gives the button clicks to the controller.
 public class CommunicationView extends JFrame {
 
-    private static final long serialVersionUID = 1L;
-    private static final String AUTO = "Auto (by recipient type)";
-    private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("dd MMM HH:mm");
-    private final JButton  backBtn =
-            new JButton("Back to Menu");
-    private final JComboBox<RecipientType> typeBox = new JComboBox<>();
+    private final JComboBox<RecipientType> typeBox = new JComboBox<>(RecipientType.values());
     private final JTextField nameField = new JTextField(20);
     private final JTextField emailField = new JTextField(20);
     private final JTextField phoneField = new JTextField(20);
-    private final JComboBox<Object> channelBox = new JComboBox<>();
+    private final JComboBox<String> channelBox =
+            new JComboBox<>(new String[]{"AUTO", "EMAIL", "SMS", "SOCIAL_POST"});
     private final JLabel autoHint = new JLabel(" ");
     private final JTextArea messageArea = new JTextArea(4, 20);
+
     private final JButton sendButton = new RoundedButton("Send Message");
+    private final JButton refreshButton = new RoundedButton("Refresh");
+    private final JButton backBtn = new JButton("Back to Menu");
 
-    private final DefaultTableModel historyModel = new DefaultTableModel(
-            new Object[]{"Time", "To", "Channel", "Status", "Message"}, 0) {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public boolean isCellEditable(int row, int column) {
-            return false;
-        }
-    };
+    private final DefaultTableModel historyModel =
+            new DefaultTableModel(new String[]{"Time", "To", "Channel", "Status", "Message"}, 0);
     private final JTable historyTable = new JTable(historyModel);
     private final DefaultListModel<String> feedModel = new DefaultListModel<>();
     private final JList<String> feedList = new JList<>(feedModel);
@@ -67,22 +55,24 @@ public class CommunicationView extends JFrame {
     public CommunicationView() {
         setTitle("Animal Rescue | Communication");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setMinimumSize(new Dimension(900, 780));
+        setMinimumSize(new Dimension(900, 800));
 
         JPanel mainPanel = new JPanel(new BorderLayout(0, 20));
         mainPanel.setBackground(LIGHT_GREEN);
         mainPanel.setBorder(new EmptyBorder(25, 30, 25, 30));
 
-        JPanel center = new JPanel(new BorderLayout(0, 20));
-        center.setBackground(LIGHT_GREEN);
-        center.add(buildFormCard(), BorderLayout.NORTH);
-        center.add(buildHistory(), BorderLayout.CENTER);
-
+        // Top: title + "Back to Menu" button
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(LIGHT_GREEN);
         headerPanel.add(header("Communication"), BorderLayout.CENTER);
         backBtn.setFont(FIELD);
         headerPanel.add(backBtn, BorderLayout.EAST);
+
+        // Middle: the form, Bottom: the message log and activity feed
+        JPanel center = new JPanel(new BorderLayout(0, 20));
+        center.setBackground(LIGHT_GREEN);
+        center.add(buildForm(), BorderLayout.NORTH);
+        center.add(buildHistory(), BorderLayout.CENTER);
 
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         mainPanel.add(center, BorderLayout.CENTER);
@@ -92,20 +82,17 @@ public class CommunicationView extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    private JPanel buildFormCard() {
-        JPanel formCard = new JPanel(new java.awt.GridBagLayout());
-        formCard.setBackground(WHITE);
-        formCard.setBorder(new EmptyBorder(22, 22, 22, 22));
+    private JPanel buildForm() {
+        JPanel form = new JPanel(new java.awt.GridBagLayout());
+        form.setBackground(WHITE);
+        form.setBorder(new EmptyBorder(22, 22, 22, 22));
 
-        styleCombo(typeBox);
-        styleCombo(channelBox);
         styleField(nameField);
         styleField(emailField);
         styleField(phoneField);
         styleField(messageArea);
-        for (JTextField f : new JTextField[]{nameField, emailField, phoneField}) {
-            f.setPreferredSize(new Dimension(250, 38));
-        }
+        styleCombo(typeBox);
+        styleCombo(channelBox);
         messageArea.setLineWrap(true);
         messageArea.setWrapStyleWord(true);
         autoHint.setFont(new Font("SansSerif", Font.ITALIC, 12));
@@ -114,61 +101,39 @@ public class CommunicationView extends JFrame {
         JScrollPane messageScroll = new JScrollPane(messageArea);
         messageScroll.setBorder(BorderFactory.createEmptyBorder());
 
-        int row = 0;
-        addField(formCard, "Recipient Type", typeBox, row++);
-        addField(formCard, "Name", nameField, row++);
-        addField(formCard, "Email Address", emailField, row++);
-        addField(formCard, "Phone Number", phoneField, row++);
-        addField(formCard, "Channel", channelBox, row++);
-        addField(formCard, "", autoHint, row++);
-        addField(formCard, "Message", messageScroll, row++);
+        addField(form, "Recipient Type", typeBox, 0);
+        addField(form, "Name", nameField, 1);
+        addField(form, "Email Address", emailField, 2);
+        addField(form, "Phone Number", phoneField, 3);
+        addField(form, "Channel", channelBox, 4);
+        addField(form, "", autoHint, 5);
+        addField(form, "Message", messageScroll, 6);
 
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        buttons.setBackground(WHITE);
         sendButton.setPreferredSize(new Dimension(180, 42));
-        GridBagConstraints b = new GridBagConstraints();
-        b.gridx = 0;
-        b.gridy = row;
-        b.gridwidth = 2;
-        b.anchor = GridBagConstraints.WEST;
-        b.insets = new Insets(8, 0, 0, 0);
-        formCard.add(sendButton, b);
-        return formCard;
+        refreshButton.setPreferredSize(new Dimension(120, 42));
+        buttons.add(sendButton);
+        buttons.add(javax.swing.Box.createHorizontalStrut(12));
+        buttons.add(refreshButton);
+        addField(form, "", buttons, 7);
+        return form;
     }
 
     private JPanel buildHistory() {
-        historyTable.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        historyTable.setForeground(TEXT);
+        historyTable.setDefaultEditor(Object.class, null);   // the table is read-only
         historyTable.setRowHeight(24);
-        historyTable.setGridColor(SECTION_BORDER);
-        historyTable.setSelectionBackground(LIGHT_GREEN);
-        historyTable.setSelectionForeground(TEXT);
-        historyTable.getTableHeader().setFont(LABEL);
-        historyTable.getTableHeader().setBackground(WHITE);
-        historyTable.getTableHeader().setForeground(DARK_GREEN);
-        int[] widths = {90, 100, 70, 50, 300};
-        for (int i = 0; i < widths.length; i++) {
-            historyTable.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
-        }
+        historyTable.getColumnModel().getColumn(4).setPreferredWidth(300);
 
-        feedList.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        feedList.setForeground(TEXT);
-
-        // Messages get about 60% of the width, the feed the rest.
-        JPanel grid = new JPanel(new java.awt.GridBagLayout());
-        grid.setBackground(LIGHT_GREEN);
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.BOTH;
-        c.weighty = 1;
-        c.weightx = 0.6;
-        c.insets = new Insets(0, 0, 0, 20);
-        grid.add(section("Recent Messages", historyTable), c);
-        c.weightx = 0.4;
-        c.insets = new Insets(0, 0, 0, 0);
-        grid.add(section("Activity Feed", feedList), c);
-        grid.setPreferredSize(new Dimension(840, 230));
-        return grid;
+        JPanel history = new JPanel(new GridLayout(1, 2, 20, 0));
+        history.setBackground(LIGHT_GREEN);
+        history.add(section("Recent Messages", historyTable));
+        history.add(section("Activity Feed", feedList));
+        history.setPreferredSize(new Dimension(840, 230));
+        return history;
     }
 
-    private static JPanel section(String title, java.awt.Component content) {
+    private JPanel section(String title, java.awt.Component content) {
         JPanel panel = new JPanel(new BorderLayout(0, 10));
         panel.setBackground(LIGHT_GREEN);
         JScrollPane scroll = new JScrollPane(content);
@@ -179,23 +144,37 @@ public class CommunicationView extends JFrame {
         return panel;
     }
 
-    // ----- filled by the controller -----
+    // ---------- the controller reads the form with these ----------
 
-    public void setRecipientTypes(RecipientType[] types) {
-        typeBox.removeAllItems();
-        for (RecipientType t : types) {
-            typeBox.addItem(t);
-        }
+    public RecipientType getRecipientType() {
+        return (RecipientType) typeBox.getSelectedItem();
     }
 
-    public void setChannels(Collection<ChannelType> channels) {
-        channelBox.removeAllItems();
-        channelBox.addItem(AUTO);
-        channels.forEach(channelBox::addItem);
+    public String getRecipientName() {
+        return nameField.getText().trim();
     }
 
-    public void setAutoChannelHint(ChannelType channel) {
-        autoHint.setText(channel == null ? " " : "Auto sends this recipient type by " + channel.label());
+    public String getEmail() {
+        return emailField.getText().trim();
+    }
+
+    public String getPhone() {
+        return phoneField.getText().trim();
+    }
+
+    // Returns "AUTO", "EMAIL", "SMS" or "SOCIAL_POST".
+    public String getSelectedChannel() {
+        return (String) channelBox.getSelectedItem();
+    }
+
+    public String getMessageText() {
+        return messageArea.getText().trim();
+    }
+
+    // ---------- the controller updates the screen with these ----------
+
+    public void setAutoHint(String text) {
+        autoHint.setText(text);
     }
 
     public void setContactFieldsEnabled(boolean enabled) {
@@ -213,42 +192,46 @@ public class CommunicationView extends JFrame {
     }
 
     public void showHistory(List<SentMessage> messages) {
-        historyModel.setRowCount(0);
+        DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("dd MMM HH:mm");
+        historyModel.setRowCount(0);   // clear the table
         for (SentMessage m : messages) {
+            String channel = "-";
+            if (m.getChannel() != null) {
+                channel = m.getChannel().toString();
+            }
+            String status = "FAILED";
+            String details = m.getFailureReason();
+            if (m.isSent()) {
+                status = "SENT";
+                details = m.getText().replace("\n", " ");
+            }
             historyModel.addRow(new Object[]{
-                    TIME.format(m.getSentAt()),
-                    m.getRecipientName(),
-                    m.getChannel() == null ? "-" : m.getChannel().label(),
-                    m.getStatus(),
-                    m.isSent() ? m.getText().replace('\n', ' ') : m.getFailureReason()
-            });
+                    m.getSentAt().format(timeFormat), m.getRecipientName(), channel, status, details});
         }
     }
 
     public void showFeed(List<String> entries) {
         feedModel.clear();
-        entries.forEach(feedModel::addElement);
+        for (String entry : entries) {
+            feedModel.addElement(entry);
+        }
     }
 
-    // ----- read by the controller -----
-
-    public RecipientType getRecipientType() { return (RecipientType) typeBox.getSelectedItem(); }
-    public String getRecipientName() { return nameField.getText().trim(); }
-    public String getEmail() { return emailField.getText().trim(); }
-    public String getPhone() { return phoneField.getText().trim(); }
-    public String getMessageText() { return messageArea.getText().trim(); }
-    public JButton getBackBtn() {return backBtn;}
-
-    /** The channel picked by hand, or null for "Auto". */
-    public ChannelType getSelectedChannel() {
-        return channelBox.getSelectedItem() instanceof ChannelType channel ? channel : null;
-    }
+    // ---------- buttons ----------
 
     public void addSendListener(ActionListener listener) {
         sendButton.addActionListener(listener);
     }
 
+    public void addRefreshListener(ActionListener listener) {
+        refreshButton.addActionListener(listener);
+    }
+
     public void addRecipientTypeListener(ActionListener listener) {
         typeBox.addActionListener(listener);
+    }
+
+    public JButton getBackBtn() {
+        return backBtn;
     }
 }
