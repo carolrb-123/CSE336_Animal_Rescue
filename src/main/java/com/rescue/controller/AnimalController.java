@@ -5,6 +5,8 @@ import java.util.List;
 import com.rescue.model.Animal;
 import com.rescue.repo.AnimalRepository;
 import com.rescue.view.AnimalView;
+import com.rescue.service.CommunicationModule;
+import com.rescue.service.observer.AnimalStatusChanged;
 
 public class AnimalController {
 
@@ -75,6 +77,13 @@ public class AnimalController {
         );
 
         repository.save(animal);
+
+        // Tell the Communication part: a new animal that is ready gets a public post.
+        if (animal.isAvailableForAdoption()) {
+            CommunicationModule.getInstance().getAnimalSubject().publish(
+                    new AnimalStatusChanged(animal.getId(), animal.getName(), "NEW", "AVAILABLE", null));
+        }
+
         refreshTable();
         clearFields();
         view.showMessage("Animal added successfully!");
@@ -126,7 +135,16 @@ public class AnimalController {
                     view.getDescriptionArea().getText().trim()
             );
 
+            Animal oldAnimal = repository.findById(id).get();
             repository.save(updatedAnimal);
+
+            // Tell the Communication part if the animal's status changed.
+            String oldStatus = statusOf(oldAnimal);
+            String newStatus = statusOf(updatedAnimal);
+            if (!oldStatus.equals(newStatus)) {
+                CommunicationModule.getInstance().getAnimalSubject().publish(
+                        new AnimalStatusChanged(id, name, oldStatus, newStatus, null));
+            }
 
             refreshTable();
             clearFields();
@@ -141,6 +159,14 @@ public class AnimalController {
                     "Select an animal from the table before updating it."
             );
         }
+    }
+
+    // "AVAILABLE" if it can be adopted, otherwise its health status (e.g. "Under Treatment").
+    private String statusOf(Animal animal) {
+        if (animal.isAvailableForAdoption()) {
+            return "AVAILABLE";
+        }
+        return animal.getHealthStatus();
     }
 
     private void deleteAnimal() {

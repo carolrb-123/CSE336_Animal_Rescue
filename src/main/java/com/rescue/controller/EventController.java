@@ -6,6 +6,12 @@ import com.rescue.repo.EventRegistrationRepository;
 import com.rescue.repo.RescueEventRepository;
 import com.rescue.repo.VolunteerRepository;
 import com.rescue.view.EventView;
+import com.rescue.model.Contact;
+import com.rescue.model.Recipient;
+import com.rescue.model.Volunteer;
+import com.rescue.service.CommunicationModule;
+import com.rescue.service.observer.EventUpdated;
+import java.util.ArrayList;
 
 import javax.swing.JTable;
 import java.time.LocalDate;
@@ -71,7 +77,24 @@ public class EventController {
                 view.showMessage("The selected event no longer exists.");
                 return;
             }
-            eventRepository.save(readEvent(id));
+            RescueEvent updated = readEvent(id);
+            eventRepository.save(updated);
+
+            // Tell the Communication part: every volunteer registered for this event gets a message.
+            List<Recipient> participants = new ArrayList<>();
+            for (EventRegistration registration : registrationRepository.findAll()) {
+                if (registration.getEventId() == id) {
+                    Optional<Volunteer> volunteer = volunteerRepository.findById(registration.getVolunteerId());
+                    if (volunteer.isPresent()) {
+                        Volunteer v = volunteer.get();
+                        participants.add(new Contact(v.getName(), v.getEmail(), v.getPhone()));
+                    }
+                }
+            }
+            CommunicationModule.getInstance().getEventSubject().publish(
+                    new EventUpdated(id, updated.getName(),
+                            "Updated: " + updated.getDate() + " at " + updated.getLocation(), participants));
+
             refreshTables();
             view.clearEventFields();
             view.showMessage("Event updated successfully!");
